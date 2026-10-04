@@ -78,5 +78,5 @@ yarn-error.log
 android/keystore.properties
 *.keystore
 !debug.keystore
-android/app/google-services.json
+google-services.json
 .orchestrate-kit-backup/
