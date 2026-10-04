@@ -59,6 +59,13 @@ react {
  */
 def enableProguardInReleaseBuilds = false
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = null
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties = new Properties()
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
  *
@@ -83,9 +90,18 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
     }
     signingConfigs {
+        // Release key lives OUTSIDE git: android/keystore.properties (see README).
+        if (keystoreProperties != null) {
+            release {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
         debug {
             storeFile file('debug.keystore')
             storePassword 'android'
@@ -100,7 +116,7 @@ android {
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig keystoreProperties != null ? signingConfigs.release : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
@@ -108,6 +124,10 @@ android {
 }
 
 dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
+    implementation("com.google.firebase:firebase-messaging")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
@@ -116,4 +136,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+}
+
+// Firebase push stays dormant until google-services.json is dropped in (docs/BACKEND-PUSH.md).
+if (file("google-services.json").exists()) {
+    apply plugin: "com.google.gms.google-services"
 }

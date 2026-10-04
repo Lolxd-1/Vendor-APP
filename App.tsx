@@ -1,45 +1,29 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useEffect, useState } from 'react';
+import { StatusBar } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { getSession, onSessionEnded, type Session } from './src/native/vendor';
+import { LoginScreen } from './src/screens/LoginScreen';
+import { OrdersScreen } from './src/screens/OrdersScreen';
+import { colors, ui } from './src/ui/theme';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+// The native watcher owns the session and the ringing; this is only the window onto it.
+const App = () => {
+  const [session, setSession] = useState<Session | null>(getSession);
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+  // Logout (manual, or the watcher seeing an expired token) returns to the login screen.
+  useEffect(() => {
+    const sub = onSessionEnded(() => setSession(null));
+    return () => sub.remove();
+  }, []);
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.card} />
+      <SafeAreaView style={ui.screen}>
+        {session ? <OrdersScreen session={session} /> : <LoginScreen onLoggedIn={setSession} />}
+      </SafeAreaView>
     </SafeAreaProvider>
   );
-}
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
+};
 
 export default App;

@@ -1,97 +1,80 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# QuickVerse Vendor (Android)
 
-# Getting Started
+Rings the shop — loud, on the alarm channel, even on Silent — until a new order is accepted.
+Same backend and rules as the web vendor dashboard. Android only.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## How it works
+```
+WatcherService (Kotlin foreground service, always on while logged in)
+  ├─ polls GET /quickVerse/v2/order/{shopId}/orders (PENDING/ACCEPTED/READY) every 10s  ← source of truth
+  ├─ STOMP socket /topic/vendor/{shopId}: any event = "poll now" (+3s)                 ← speed only
+  ├─ OrderBook: board + "what this phone just did" (120s grace, no re-ring)            ← OrderBook.kt
+  └─ ring while anything is PENDING: Ringer (alarm stream, max volume, vibration)
+     + full-screen notification over the lock screen. Nothing else stops it.
+Firebase push NEW_ORDER (optional) → starts the service when the phone killed it.
+BootReceiver → resumes after reboot / app update.
+React Native = screens only: Login (phone + OTP), New / Preparing / Ready tabs, setup checklist.
+Accept / Reject / Ready / Handover are REST calls from JS, then `markLocal` tells the native board.
+```
+Session expiry logs the vendor out (same as the website) and posts "Logged out — orders will NOT ring".
 
-## Step 1: Start Metro
+## Prerequisites (Windows)
+- Node ≥ 20, JDK **17** (not Android Studio's bundled JDK 25). A portable one lives in
+  `..\.tools\jdk17`; point `JAVA_HOME` at it (or set Android Studio → Gradle JDK = 17).
+- Android SDK (Android Studio). `android/local.properties`: `sdk.dir=C:/Users/<you>/AppData/Local/Android/Sdk`.
+  Missing SDK pieces (platform 36, NDK 27.1, CMake) download automatically on first build.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
-
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+## Run
+```bash
+npm install
+npm start                      # Metro
+npm run android                # debug build on emulator / USB phone
 ```
 
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+## Checks
+```bash
+npm run typecheck && npm run lint && npm test          # JS
+cd android && ./gradlew testDebugUnitTest              # Kotlin (OrderBook, JWT, STOMP, parsing)
+node scripts/smoke.mjs <shopId> [jwt]                  # backend contract, once the backend is up
 ```
 
-### iOS
+## Release APK
+1. Create the key once (back it up — losing it means vendors must uninstall to update):
+   `keytool -genkeypair -v -keystore android/app/quickverse-vendor.keystore -alias quickverse-vendor -keyalg RSA -keysize 2048 -validity 10000`
+2. `android/keystore.properties` (git-ignored):
+   ```
+   storeFile=quickverse-vendor.keystore
+   storePassword=...
+   keyAlias=quickverse-vendor
+   keyPassword=...
+   ```
+3. `cd android && ./gradlew assembleRelease` → `android/app/build/outputs/apk/release/app-release.apk`
+   (without keystore.properties the release APK is signed with the debug key — for testing only).
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+## Push (optional, needs backend work)
+See `docs/BACKEND-PUSH.md`. Drop `google-services.json` into `android/app/` and rebuild; without it,
+push is simply off.
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+## Phone setup (shown in-app when missing)
+Notifications on · Full-screen alerts allowed (Android 14+) · Battery: Unrestricted ·
+Xiaomi/Oppo/Vivo/Realme: Autostart on. Keep the counter phone on its charger.
 
-```sh
-bundle install
-```
+## Device test checklist
+- [ ] Login with OTP → "Live" dot, service notification "Live — waiting for orders"
+- [ ] Place an order → rings within ~10s (≈2s with the socket), screen locked AND on Silent
+- [ ] Accept (pick prep) → ring stops at once; order in Preparing with countdown
+- [ ] Two orders → ring continues until both are handled
+- [ ] Accept on the web dashboard → phone stops ringing within 10s
+- [ ] Customer cancels → ring stops
+- [ ] Reject with reason → gone, no re-ring
+- [ ] Mark ready → Ready tab; Handover enabled only when rider ARRIVED_AT_STORE
+- [ ] Wi-Fi off/on while idle → reconnects, orders placed meanwhile ring
+- [ ] Swipe app away, reboot phone → still rings for a new order
+- [ ] Test sound plays ~2s, never silences a real ring
+- [ ] Log out → nothing rings
 
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## Known limits
+- Backend has no TLS: plain HTTP to `prd.quickverse.in` only (`network_security_config.xml`).
+  When it gets HTTPS, switch `BASE_URL` (src/config.ts, Api.kt) and `WS_URL` (StompNudge.kt) to https/wss.
+- React Native 0.81.4 to match the transporter app; plan an upgrade (0.87+) later.
+- A force-stopped app cannot ring until opened again (Android rule).

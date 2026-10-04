@@ -1,27 +1,20 @@
 {
   "name": "quickverse-vendor-app",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
-    "@notifee/react-native": "^9.1.8",
-    "@react-native-async-storage/async-storage": "^3.1.1",
-    "@react-native-firebase/app": "^22.4.0",
-    "@react-native-firebase/messaging": "^22.4.0",
-    "@react-native/new-app-screen": "0.81.4",
-    "@stomp/stompjs": "^7.3.0",
     "react": "19.1.0",
     "react-native": "0.81.4",
-    "react-native-background-actions": "^4.1.0",
-    "react-native-safe-area-context": "^5.5.2",
-    "text-encoding-polyfill": "^0.6.7",
-    "zustand": "^5.0.15"
+    "react-native-safe-area-context": "^5.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -45,5 +38,13 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "codegenConfig": {
+    "name": "AppSpecs",
+    "type": "modules",
+    "jsSrcsDir": "specs",
+    "android": {
+      "javaPackageName": "com.quickverse.vendor.specs"
+    }
   }
 }

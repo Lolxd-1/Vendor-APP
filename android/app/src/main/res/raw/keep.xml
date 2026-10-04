@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release builds shrink resources; the ring is only referenced from code. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@raw/order_ring" />
