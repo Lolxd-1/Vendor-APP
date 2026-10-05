@@ -11,3 +11,4 @@
 - 2026-10-06 Ruling: Plus Jakarta Sans + Lucide icon font as bundled assets, zero npm deps — why: no native modules on a MAX_PATH-limited Windows build; brand-fit type — cost if wrong: swap TTFs
 - 2026-10-06 plan written: 9 tasks, 15 ACs, 12 risks; status executing
 - 2026-10-05T19:44:50Z dispatch T01 (self, A5)
+- 2026-10-05T19:49:52Z T01 gate PASS c9fcd61..add0fd1; dispatch T02 (self)
