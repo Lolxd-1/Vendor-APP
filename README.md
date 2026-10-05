@@ -24,6 +24,19 @@ Session expiry logs the vendor out (same as the website) and posts "Logged out â
 - Android SDK (Android Studio). `android/local.properties`: `sdk.dir=C:/Users/<you>/AppData/Local/Android/Sdk`.
   Missing SDK pieces (platform 36, NDK 27.1, CMake) download automatically on first build.
 
+## Windows: build from a short path (MAX_PATH)
+The native (CMake/ninja) build fails with "Filename longer than 260 characters" when the project sits
+in a deep folder. Map it to a drive letter (lasts until reboot) and build from there:
+```powershell
+subst Q: C:\Users\omkar\Downloads\quickverse-web-vendor-dashboard-dev\quickverse-vendor-app
+$env:JAVA_HOME = "C:\Users\omkar\Downloads\quickverse-web-vendor-dashboard-dev\.tools\jdk17"
+$env:QV_REAL_ROOT = "C:\Users\omkar\Downloads\quickverse-web-vendor-dashboard-dev\quickverse-vendor-app"
+cd Q:\android; .\gradlew.bat assembleRelease
+```
+`QV_REAL_ROOT` makes JS bundling run through the real path (Metro resolves `subst` drives back to it)
+via `scripts/rn-cli-realpath.js`; without the variable the normal React Native CLI is used.
+Moving the project to a short path such as `C:\qv\vendor-app` removes the need for all of this.
+
 ## Run
 ```bash
 npm install

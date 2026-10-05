@@ -1,10 +1,11 @@
 # ORCHESTRATOR STATE
 run: vendor-app-v1 · branch: main · created: 2026-10-05
-status: in-progress
+status: done (offline scope) — live checks pending backend + device
 
 ## NEXT ACTION
-Finish T09 gate: gradle assembleDebug + testDebugUnitTest + assembleRelease (JDK 17 at ../.tools/jdk17).
-Then live checks once backend is up: `node scripts/smoke.mjs <shopId> [jwt]`, README device checklist.
+Backend up -> `node scripts/smoke.mjs <shopId> [jwt]`. Then install
+android/app/build/outputs/apk/release/app-release.apk on a phone/emulator and run the README checklist.
+Emulator could not boot here (needs ~4 GB free RAM; 3.7 GB free while other programs were open).
 
 ## Architecture change (2026-10-05, from Plan-agent verification — supersedes PLAN.md "Architecture")
 - Always-on watcher is NATIVE Kotlin (WatcherService, specialUse FGS): headless-JS timers fire every vsync
@@ -25,7 +26,7 @@ Then live checks once backend is up: `node scripts/smoke.mjs <shopId> [jwt]`, RE
 - [x] T06 Push (FCM wake-up, guarded) + BootReceiver + docs/BACKEND-PUSH.md
 - [x] T07 UI: Login, Orders (New/Preparing/Ready), OrderCard, SetupChecklist
 - [x] T08 Jest (17) + smoke script + README
-- [ ] T09 Gate: gradle assembleDebug, testDebugUnitTest, assembleRelease
+- [x] T09 Gate: tsc, eslint, jest 17/17, gradle testDebugUnitTest 21/21, assembleDebug, assembleRelease
 
 ## Unverified (needs live backend / device)
 - WS raw path /quickVerse/ws/websocket accepts STOMP CONNECT (smoke.mjs proves it).
