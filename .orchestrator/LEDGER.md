@@ -18,3 +18,4 @@
 - 2026-10-05T19:58:37Z T04 gate PASS 80d79a2..5e8709e; dispatch T05 (self)
 - 2026-10-05T19:59:46Z Ruling: T05 write-set += src/app/MainShell.tsx; OrdersScreen prop onOpenTimings; Orders header loses Test sound/Log out (move to T08 pages); label 'Rider OTP' kept — why: schedule-closed sheet must open Store timings; vendors know 'OTP' — cost if wrong: logout unreachable until T08 lands (same run)
 - 2026-10-05T20:04:15Z T05 gate PASS b9b88e2..362b6a7; dispatch T06 (self)
+- 2026-10-05T20:06:48Z T06 gate PASS abb7e34..3232b85; dispatch T07 (self)
