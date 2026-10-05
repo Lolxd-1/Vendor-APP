@@ -3,19 +3,32 @@ run: vendor-app-v1 · branch: main · created: 2026-10-05
 status: in-progress
 
 ## NEXT ACTION
-Implement remaining tasks below in order; gate each with: npx tsc --noEmit && npx eslint . && npx jest
+Finish T09 gate: gradle assembleDebug + testDebugUnitTest + assembleRelease (JDK 17 at ../.tools/jdk17).
+Then live checks once backend is up: `node scripts/smoke.mjs <shopId> [jwt]`, README device checklist.
+
+## Architecture change (2026-10-05, from Plan-agent verification — supersedes PLAN.md "Architecture")
+- Always-on watcher is NATIVE Kotlin (WatcherService, specialUse FGS): headless-JS timers fire every vsync
+  (CPU/OEM kills), one unhandled rejection kills the task, Android 17 blocks background audio outside an FGS.
+- REST poll = source of truth (OrderBook.kt); STOMP socket = "poll now" nudge only (frame content ignored),
+  so the web's socket-merge rules (phantom inserts, forward-only frames) are unnecessary by construction.
+- Notifee (archived 2026-04-07), background-actions, stompjs, zustand, AsyncStorage, RNFirebase: dropped.
+  Native notifications; native Firebase SDK (PushService) as dormant wake-up.
+- minSdk 26. RN stays 0.81.4 (team version); upgrade to 0.87+ later.
 
 ## Tasks
-- [x] T00 Scaffold RN 0.81.4, deps, git, orchestrate kit, JDK 17 portable (../.tools/jdk17)
-- [x] T01 Core logic: domain/orderRules, store/orderStore, store/sessionStore, store/syncStatus
-- [ ] T02 API client + endpoints
-- [ ] T03 Native Ringer TurboModule (Kotlin) + JS wrapper
-- [ ] T04 Sync: socket, poller, watcher (foreground service loop) + shift lifecycle
-- [ ] T05 Notifications + ring controller + manifest/resources
-- [ ] T06 Push (FCM, guarded) + docs/BACKEND-PUSH.md
-- [ ] T07 UI: Login, Orders (tabs), cards, setup checklist
-- [ ] T08 Tests (ported web cases + new), smoke script, README
-- [ ] T09 Gate: tsc, eslint, jest, gradle assembleDebug + assembleRelease
+- [x] T00 Scaffold RN 0.81.4, git, orchestrate kit, JDK 17 portable
+- [x] T01 OrderBook (Kotlin) + JUnit cases ported from web dashboardStore.test.ts
+- [x] T02 JS API client + endpoints (login, OTP, accept/reject/ready/handover) + tests
+- [x] T03 Ringer (alarm stream, max volume + restore, vibration, test beep)
+- [x] T04 WatcherService + StompNudge + Api.kt + Session/Jwt + VendorRuntime
+- [x] T05 Notifications (silent full-screen order alert, service, logged-out) + manifest + NSC
+- [x] T06 Push (FCM wake-up, guarded) + BootReceiver + docs/BACKEND-PUSH.md
+- [x] T07 UI: Login, Orders (New/Preparing/Ready), OrderCard, SetupChecklist
+- [x] T08 Jest (17) + smoke script + README
+- [ ] T09 Gate: gradle assembleDebug, testDebugUnitTest, assembleRelease
 
-## Open questions / unverified (needs live backend)
-- WS raw path /quickVerse/ws/websocket; creationTime in socket frames; JWT lifetime.
+## Unverified (needs live backend / device)
+- WS raw path /quickVerse/ws/websocket accepts STOMP CONNECT (smoke.mjs proves it).
+- JWT lifetime; backend VENDOR push (docs/BACKEND-PUSH.md).
+- `google-services.json` in repo root is for com.quickverse / com.quickverseadmin_ui only — a
+  com.quickverse.vendor entry must be registered before it goes to android/app/.

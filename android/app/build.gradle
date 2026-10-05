@@ -52,6 +52,12 @@ react {
 
     /* Autolinking */
     autolinkLibrariesWithApp()
+
+    // Windows MAX_PATH: native (CMake) builds run from a short `subst` drive, but Metro resolves
+    // that drive back to the real path; this CLI wrapper re-expresses paths for Metro (README).
+    if (System.getenv("QV_REAL_ROOT")) {
+        cliFile = file("../../scripts/rn-cli-realpath.js")
+    }
 }
 
 /**
