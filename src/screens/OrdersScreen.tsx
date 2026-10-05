@@ -35,7 +35,7 @@ export interface OrdersScreenProps {
   onOpenTimings: () => void;
 }
 
-const connection = (board: Board): { label: string; tone: Tone; icon: IconName } =>
+export const connection = (board: Board): { label: string; tone: Tone; icon: IconName } =>
   board.socket
     ? { label: 'Live', tone: 'green', icon: 'wifi' }
     : board.lastPollOk === false

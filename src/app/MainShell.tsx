@@ -5,11 +5,12 @@ import type { OrderPhase } from '../domain/order';
 import { useShopProfile } from '../hooks/useShopProfile';
 import { useStoreStatus } from '../hooks/useStoreStatus';
 import { getBoard, getSetupStatus, onBoardChanged, pollNow, type Session } from '../native/vendor';
+import { AccountScreen } from '../screens/AccountScreen';
+import { AlertsScreen } from '../screens/AlertsScreen';
 import { HistoryScreen } from '../screens/HistoryScreen';
 import { InsightsScreen } from '../screens/InsightsScreen';
 import { OrdersScreen } from '../screens/OrdersScreen';
-import { EmptyState } from '../ui/EmptyState';
-import { LargeHeader } from '../ui/LargeHeader';
+import { StoreTimingsScreen } from '../screens/StoreTimingsScreen';
 import { colors } from '../ui/theme';
 import { TabBar } from './TabBar';
 
@@ -32,8 +33,6 @@ const requestNotificationPermission = async () => {
     await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
   }
 };
-
-const PAGE_TITLES: Record<PageKey, string> = { timings: 'Store timings', alerts: 'Order alerts' };
 
 // The logged-in app: four tabs over the native order board, plus pages pushed on top (store timings, alerts).
 export const MainShell = ({ session }: { session: Session }) => {
@@ -112,7 +111,7 @@ export const MainShell = ({ session }: { session: Session }) => {
     ),
     history: <HistoryScreen shopId={session.shopId} />,
     insights: <InsightsScreen shopId={session.shopId} board={board} active={nav.tab === 'insights' && !page} />,
-    account: <EmptyState icon="store" title="Account" />,
+    account: <AccountScreen session={session} profile={profile} setup={setup} onOpen={openPage} />,
   };
 
   return (
@@ -123,9 +122,14 @@ export const MainShell = ({ session }: { session: Session }) => {
           {tabs[key]}
         </View>
       ))}
-      {page && (
+      {page === 'timings' && (
         <View style={styles.fill}>
-          <LargeHeader title={PAGE_TITLES[page]} onBack={closePage} />
+          <StoreTimingsScreen store={store} onBack={closePage} />
+        </View>
+      )}
+      {page === 'alerts' && (
+        <View style={styles.fill}>
+          <AlertsScreen board={board} setup={setup} onBack={closePage} />
         </View>
       )}
       {!page && <TabBar tab={nav.tab} pending={pendingCount} onChange={selectTab} />}
