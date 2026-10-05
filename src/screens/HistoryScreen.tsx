@@ -92,12 +92,20 @@ export const HistoryScreen = ({ shopId }: { shopId: string }) => {
         title="History"
         subtitle={list.page >= 0 ? `${list.orders.length}${hasMore ? '+' : ''} orders` : 'Your past orders'}
       />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipRow}
+        contentContainerStyle={styles.chips}>
         {TIMES.map(t => (
           <Chip key={t.key} label={t.label} selected={t.key === time} onPress={() => setTime(t.key)} />
         ))}
       </ScrollView>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.chips, styles.chipsLast]}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipRow}
+        contentContainerStyle={[styles.chips, styles.chipsLast]}>
         {STATUSES.map(s => (
           <Chip key={s.label} label={s.label} selected={s === status} onPress={() => setStatus(s)} />
         ))}
@@ -164,7 +172,9 @@ const HistoryRow = ({ order, onPress }: { order: Order; onPress: () => void }) =
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  chips: { gap: space.s, paddingHorizontal: space.l, paddingBottom: space.s },
+  // A sideways row inside a vertical screen grows to fill the free height unless told not to.
+  chipRow: { flexGrow: 0 },
+  chips: { gap: space.s, paddingHorizontal: space.l, paddingBottom: space.s, alignItems: 'center' },
   chipsLast: { paddingBottom: space.m },
   list: { paddingHorizontal: space.l, paddingBottom: space.xl, gap: space.s, flexGrow: 1 },
   spinner: { marginVertical: space.xxl },
