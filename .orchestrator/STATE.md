@@ -8,7 +8,7 @@ updated: 2026-10-06 · Claude Code / claude-opus-5-5
 <!-- status: executing | planning | awaiting-approval | executing | integrating | done | blocked -->
 
 ## NEXT ACTION
-Phase 3: T08 in progress (Account, timings, alerts). Then T09.
+Phase 3: T09 in progress (integrate, prove, docs). Then Phase 5 close.
 
 ## Baseline
 verify-all @ab92e97: typecheck PASS, lint PASS, jest 17/17 PASS (3 suites), android JS bundle PASS. No pre-existing failures.
@@ -21,8 +21,8 @@ verify-all @ab92e97: typecheck PASS, lint PASS, jest 17/17 PASS (3 suites), andr
 - [x] T05 Orders screen, OrderCard, RejectSheet, StoreSwitch — w4 — deps T04 — done b9b88e2..362b6a7 (gate PASS)
 - [x] T06 History + OrderDetailsSheet — w5 — deps T04 — done abb7e34..3232b85 (gate PASS)
 - [x] T07 Insights — w6 — deps T04 — done ca876a0..de1c0b0 (gate PASS)
-- [~] T08 Account, Store timings, Order alerts — w7 — deps T04 — base=d0a76bb agent=orchestrator attempt=1
-- [ ] T09 Integrate: verify-all, AC1 diff, docs — w8 — deps T05-T08
+- [x] T08 Account, Store timings, Order alerts — w7 — deps T04 — done d0a76bb..0210cd3 (gate PASS)
+- [~] T09 Integrate: verify-all, AC1 diff, docs — w8 — deps T05-T08 — agent=orchestrator attempt=1
 <!-- one line per task, starting at column 0 with "- [", e.g.
   - [x] T01 Add Money type — w1 — done 1a2b3c4..5d6e7f8 (gate PASS)
   - [~] T02 Parse amounts — w2 — base=5d6e7f8 agent=<id> attempt=1
