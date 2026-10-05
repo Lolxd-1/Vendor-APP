@@ -1,3 +1,6 @@
+import type { HistoryStatus, Order, TimeRange } from '../domain/order';
+import { parseSchedule, type StoreSchedule, type Week } from '../domain/schedule';
+import { parseStats, type TodayStats } from '../domain/stats';
 import { ApiError, request } from './client';
 
 // Contract copied from the web dashboard (src/apis/*.ts). Do not change paths or param names.
@@ -40,3 +43,49 @@ export const rejectOrder = (orderId: string, reason: string) =>
 export const markOrderReady = (orderId: string) => request<unknown>('PATCH', orderPath(orderId, 'ready'));
 
 export const handoverOrder = (orderId: string) => request<unknown>('PATCH', orderPath(orderId, 'handover'));
+
+// --- Read-mostly screens (Insights, History, Store timings). Same contract as the web dashboard. ---
+
+export const getDashboardStats = async (shopId: string): Promise<TodayStats> => {
+  const stats = parseStats(await request<unknown>('GET', `/quickVerse/v2/order/${encodeURIComponent(shopId)}/dashboard-stats`));
+  if (!stats) throw new ApiError("Could not load today's numbers", null);
+  return stats;
+};
+
+export interface OrdersPage {
+  orders: Order[];
+  totalPages: number;
+}
+
+// 50 orders per page, newest first; pages start at 0.
+export const getOrdersPage = async (
+  shopId: string,
+  f: { statuses?: HistoryStatus[]; timeRange?: TimeRange; page: number },
+): Promise<OrdersPage> => {
+  const res = await request<{ response?: { orders?: unknown; totalPages?: unknown } }>(
+    'GET',
+    `/quickVerse/v2/order/${encodeURIComponent(shopId)}/orders`,
+    { query: { orderStatus: f.statuses?.length ? f.statuses : undefined, timeRange: f.timeRange, page: f.page } },
+  );
+  const orders = Array.isArray(res?.response?.orders)
+    ? (res.response.orders as Order[]).filter(o => typeof o?.orderId === 'string')
+    : [];
+  return { orders, totalPages: Number(res?.response?.totalPages) || 0 };
+};
+
+const schedulePath = (shopId: string) => `/v1/vendor-schedules/shop/${encodeURIComponent(shopId)}`;
+
+export const getSchedule = async (shopId: string): Promise<StoreSchedule> =>
+  parseSchedule(await request<unknown>('GET', schedulePath(shopId)));
+
+export const setManualOffline = async (shopId: string, offline: boolean): Promise<void> => {
+  await request<unknown>('PATCH', `${schedulePath(shopId)}/manual-offline`, { query: { manualOfflineOverride: offline } });
+};
+
+// The web always sends manualOfflineOverride:false here, which would silently re-open a store the vendor closed;
+// the current value is passed through instead.
+export const saveSchedule = async (shopId: string, week: Week, manualOffline: boolean): Promise<void> => {
+  await request<unknown>('POST', '/v1/vendor-schedules/configure', {
+    body: { shopId, manualOfflineOverride: manualOffline, scheduleActive: true, operatingHours: JSON.stringify(week) },
+  });
+};

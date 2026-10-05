@@ -1,5 +1,15 @@
 import { ApiError } from '../src/api/client';
-import { acceptOrder, login, rejectOrder, requestOtp } from '../src/api/endpoints';
+import {
+  acceptOrder,
+  getDashboardStats,
+  getOrdersPage,
+  getSchedule,
+  login,
+  rejectOrder,
+  requestOtp,
+  saveSchedule,
+  setManualOffline,
+} from '../src/api/endpoints';
 
 const fetchMock = jest.fn();
 (globalThis as { fetch: unknown }).fetch = fetchMock;
@@ -51,5 +61,57 @@ describe('backend contract (same as the web dashboard)', () => {
   it('maps network failures to a readable error', async () => {
     fetchMock.mockRejectedValueOnce(new TypeError('Network request failed'));
     await expect(requestOtp('9876543210')).rejects.toMatchObject({ message: 'No connection to the server', status: null });
+  });
+});
+
+describe('history, stats and store timings (same contract as the web dashboard)', () => {
+  it('history page sends repeated orderStatus, timeRange and page', async () => {
+    reply(200, { response: { orders: [{ orderId: 'A1' }, { orderId: 7 }], totalPages: 3 } });
+    await expect(getOrdersPage('7', { statuses: ['REJECTED', 'CANCELLED'], timeRange: 'TODAY', page: 2 })).resolves.toEqual({
+      orders: [{ orderId: 'A1' }],
+      totalPages: 3,
+    });
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'http://prd.quickverse.in/quickVerse/v2/order/7/orders?orderStatus=REJECTED&orderStatus=CANCELLED&timeRange=TODAY&page=2',
+    );
+  });
+
+  it('history "All" sends no orderStatus at all', async () => {
+    reply(200, { response: {} });
+    await expect(getOrdersPage('7', { statuses: [], timeRange: 'THIS_MONTH', page: 0 })).resolves.toEqual({ orders: [], totalPages: 0 });
+    expect(fetchMock.mock.calls[0][0]).toBe('http://prd.quickverse.in/quickVerse/v2/order/7/orders?timeRange=THIS_MONTH&page=0');
+  });
+
+  it('stats without the response wrapper is an error', async () => {
+    reply(200, {});
+    await expect(getDashboardStats('7')).rejects.toMatchObject({ message: "Could not load today's numbers" });
+    expect(fetchMock.mock.calls[0][0]).toBe('http://prd.quickverse.in/quickVerse/v2/order/7/dashboard-stats');
+  });
+
+  it('reads the schedule', async () => {
+    reply(200, { manualOfflineOverride: false, operatingHoursJson: '{"Sun":{"openTime":"00:00","closeTime":"00:00"}}' });
+    await expect(getSchedule('7')).resolves.toEqual({ manualOffline: false, week: { Sun: { openTime: '00:00', closeTime: '00:00' } } });
+    expect(fetchMock.mock.calls[0][0]).toBe('http://prd.quickverse.in/v1/vendor-schedules/shop/7');
+  });
+
+  it('online/offline switch is a PATCH with the flag in the query', async () => {
+    reply(200, 'ok');
+    await setManualOffline('7', true);
+    expect(fetchMock.mock.calls[0][0]).toBe('http://prd.quickverse.in/v1/vendor-schedules/shop/7/manual-offline?manualOfflineOverride=true');
+    expect(fetchMock.mock.calls[0][1].method).toBe('PATCH');
+  });
+
+  it('saving timings keeps the current manual-offline value', async () => {
+    reply(200, {});
+    await saveSchedule('7', { Mon: { openTime: '10:00', closeTime: '11:00' } }, true);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://prd.quickverse.in/v1/vendor-schedules/configure');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body)).toEqual({
+      shopId: '7',
+      manualOfflineOverride: true,
+      scheduleActive: true,
+      operatingHours: '{"Mon":{"openTime":"10:00","closeTime":"11:00"}}',
+    });
   });
 });
