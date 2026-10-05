@@ -5,6 +5,7 @@ import type { OrderPhase } from '../domain/order';
 import { useShopProfile } from '../hooks/useShopProfile';
 import { useStoreStatus } from '../hooks/useStoreStatus';
 import { getBoard, getSetupStatus, onBoardChanged, pollNow, type Session } from '../native/vendor';
+import { HistoryScreen } from '../screens/HistoryScreen';
 import { OrdersScreen } from '../screens/OrdersScreen';
 import { EmptyState } from '../ui/EmptyState';
 import { LargeHeader } from '../ui/LargeHeader';
@@ -108,7 +109,7 @@ export const MainShell = ({ session }: { session: Session }) => {
         onOpenTimings={() => openPage('timings')}
       />
     ),
-    history: <EmptyState icon="history" title="History" />,
+    history: <HistoryScreen shopId={session.shopId} />,
     insights: <EmptyState icon="chart-column" title="Insights" />,
     account: <EmptyState icon="store" title="Account" />,
   };
