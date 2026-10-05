@@ -14,7 +14,7 @@ Phase 3: execute T01 (design system). Orchestrator executes briefs itself (A5) a
 verify-all @ab92e97: typecheck PASS, lint PASS, jest 17/17 PASS (3 suites), android JS bundle PASS. No pre-existing failures.
 
 ## Tasks
-- [ ] T01 Design system: fonts, icon font, tokens, UI kit — w1
+- [~] T01 Design system: fonts, icon font, tokens, UI kit — w1 — agent=orchestrator attempt=1
 - [ ] T02 Domain + API for stats/history/schedule — w1
 - [ ] T03 Hooks: useRemote, useStoreStatus, useShopProfile — w2 — deps T02
 - [ ] T04 App shell, tab bar, back handling, Login redesign — w3 — deps T01 T03
