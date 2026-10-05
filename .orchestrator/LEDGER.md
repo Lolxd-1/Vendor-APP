@@ -26,3 +26,4 @@
 - 2026-10-05T20:13:31Z FIX1 gate PASS c73aa6b..baf2f07; re-dispatch T09 (docs)
 - 2026-10-05T20:14:57Z T09 gate PASS df61c9a..5e896ef; verify-all PASS 95/95; status done (device checks pending, see NEXT ACTION)
 - 2026-10-05T20:15:11Z Note: a backtick in an unquoted heredoc made the shell call 'subst Q:' with no path; Windows rejected it (Invalid parameter), no mapping created (subst listing checked). STATE text fixed.
+- 2026-10-05T20:15:28Z Clarification: Q: => quickverse-vendor-app mapping pre-exists (earlier build session); the stray 'subst Q:' had no target and could not create it. Left untouched.
