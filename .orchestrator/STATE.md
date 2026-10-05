@@ -8,7 +8,7 @@ updated: 2026-10-06 · Claude Code / claude-opus-5-5
 <!-- status: executing | planning | awaiting-approval | executing | integrating | done | blocked -->
 
 ## NEXT ACTION
-Phase 3: T03 in progress (hooks). Then T04.
+Phase 3: T04 in progress (shell, tab bar, login). Then T05.
 
 ## Baseline
 verify-all @ab92e97: typecheck PASS, lint PASS, jest 17/17 PASS (3 suites), android JS bundle PASS. No pre-existing failures.
@@ -16,8 +16,8 @@ verify-all @ab92e97: typecheck PASS, lint PASS, jest 17/17 PASS (3 suites), andr
 ## Tasks
 - [x] T01 Design system: fonts, icon font, tokens, UI kit — w1 — done c9fcd61..add0fd1 (gate PASS)
 - [x] T02 Domain + API for stats/history/schedule — w1 — done 336338d..dac07f7 (gate PASS)
-- [~] T03 Hooks: useRemote, useStoreStatus, useShopProfile — w2 — deps T02 — agent=orchestrator attempt=1
-- [ ] T04 App shell, tab bar, back handling, Login redesign — w3 — deps T01 T03
+- [x] T03 Hooks: useRemote, useStoreStatus, useShopProfile — w2 — deps T02 — done 1225adf..26a1a4c (gate PASS)
+- [~] T04 App shell, tab bar, back handling, Login redesign — w3 — deps T01 T03 — agent=orchestrator attempt=1
 - [ ] T05 Orders screen, OrderCard, RejectSheet, StoreSwitch — w4 — deps T04
 - [ ] T06 History + OrderDetailsSheet — w5 — deps T04
 - [ ] T07 Insights — w6 — deps T04
