@@ -8,7 +8,7 @@ updated: 2026-10-06 · Claude Code / claude-opus-5-5
 <!-- status: executing | planning | awaiting-approval | executing | integrating | done | blocked -->
 
 ## NEXT ACTION
-Phase 3: T05 in progress (Orders + OrderCard). Then T06.
+Phase 3: T06 in progress (History). Then T07.
 
 ## Baseline
 verify-all @ab92e97: typecheck PASS, lint PASS, jest 17/17 PASS (3 suites), android JS bundle PASS. No pre-existing failures.
@@ -18,8 +18,8 @@ verify-all @ab92e97: typecheck PASS, lint PASS, jest 17/17 PASS (3 suites), andr
 - [x] T02 Domain + API for stats/history/schedule — w1 — done 336338d..dac07f7 (gate PASS)
 - [x] T03 Hooks: useRemote, useStoreStatus, useShopProfile — w2 — deps T02 — done 1225adf..26a1a4c (gate PASS)
 - [x] T04 App shell, tab bar, back handling, Login redesign — w3 — deps T01 T03 — done 80d79a2..5e8709e (gate PASS)
-- [~] T05 Orders screen, OrderCard, RejectSheet, StoreSwitch — w4 — deps T04 — base=b9b88e2 agent=orchestrator attempt=1
-- [ ] T06 History + OrderDetailsSheet — w5 — deps T04
+- [x] T05 Orders screen, OrderCard, RejectSheet, StoreSwitch — w4 — deps T04 — done b9b88e2..362b6a7 (gate PASS)
+- [~] T06 History + OrderDetailsSheet — w5 — deps T04 — agent=orchestrator attempt=1
 - [ ] T07 Insights — w6 — deps T04
 - [ ] T08 Account, Store timings, Order alerts — w7 — deps T04
 - [ ] T09 Integrate: verify-all, AC1 diff, docs — w8 — deps T05-T08
