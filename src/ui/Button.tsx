@@ -17,17 +17,16 @@ interface Props {
   disabled?: boolean;
   /** Breathes to pull the eye (Zomato's late "food ready" button). */
   pulse?: boolean;
-  /** Older API, kept for screens that predate the redesign. */
+  /** Custom color; with `outline`, a white button with a colored border and label (e.g. red Reject). */
   color?: string;
   outline?: boolean;
-  compact?: boolean;
 }
 
 const FILLS: Record<Variant, { bg: string; pressed: string; fg: string }> = {
   primary: { bg: colors.blue, pressed: colors.bluePressed, fg: colors.onColor },
-  secondary: { bg: colors.blueSoft, pressed: '#D9E4FF', fg: colors.blue },
-  danger: { bg: colors.red, pressed: '#B0222A', fg: colors.onColor },
-  success: { bg: colors.green, pressed: '#086246', fg: colors.onColor },
+  secondary: { bg: colors.blueSoft, pressed: colors.blueSoftPressed, fg: colors.blue },
+  danger: { bg: colors.red, pressed: colors.redPressed, fg: colors.onColor },
+  success: { bg: colors.green, pressed: colors.greenPressed, fg: colors.onColor },
   ghost: { bg: 'transparent', pressed: colors.blueSoft, fg: colors.blue },
 };
 
@@ -44,7 +43,6 @@ export const Button = ({
   pulse,
   color,
   outline,
-  compact,
 }: Props) => {
   const off = !!(disabled || busy);
   const reduced = useReducedMotion();
@@ -69,7 +67,7 @@ export const Button = ({
   const custom = color ?? null;
   const bg = outline ? colors.surface : custom ?? fill.bg;
   const fg = outline ? custom ?? colors.blue : custom ? colors.onColor : fill.fg;
-  const h = compact ? HEIGHT.s : HEIGHT[size];
+  const h = HEIGHT[size];
 
   return (
     <Animated.View style={{ opacity }}>

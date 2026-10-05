@@ -10,10 +10,11 @@ staff who may read little English. So: big type, one main action per card, every
 | surface | #FFFFFF | cards, lists, sheets |
 | ink / ink2 / ink3 | #0B1B34 / #55647A / #8B97A9 | text: primary / secondary / hints |
 | line | #E3E8F0 | hairlines (no shadows anywhere) |
-| blue (+pressed, soft) | #1557FF (#0E43CC, #EAF0FF) | brand, primary actions, new orders |
-| green (+soft) | #0B7F58 (#E6F5EE) | online, ready, delivered |
-| red (+soft) | #D42A33 (#FDECEC) | late, reject, offline |
+| blue (+pressed, soft, soft pressed) | #1557FF (#0E43CC, #EAF0FF, #D9E4FF) | brand, primary actions, new orders |
+| green (+pressed, soft) | #0B7F58 (#086246, #E6F5EE) | online, ready, delivered |
+| red (+pressed, soft) | #D42A33 (#B0222A, #FDECEC) | late, reject, offline |
 | amber (+soft) | #A85F00 (#FFF3DE) | preparing, warnings |
+| track | #E8ECF3 | segmented-control background |
 
 Spacing 4/8/12/16/24/32 · radius 10/14/20/28/pill (buttons & chips 14, cards 20, sheets 28).
 

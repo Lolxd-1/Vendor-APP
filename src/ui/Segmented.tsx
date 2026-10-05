@@ -50,7 +50,7 @@ export const Segmented = <K extends string>({
 );
 
 const styles = StyleSheet.create({
-  track: { flexDirection: 'row', backgroundColor: '#E8ECF3', borderRadius: radius.m, padding: 3 },
+  track: { flexDirection: 'row', backgroundColor: colors.track, borderRadius: radius.m, padding: 3 },
   segment: {
     flex: 1,
     minHeight: 42,
