@@ -1,11 +1,23 @@
 # ORCHESTRATOR STATE
 run: vendor-app-v1 · branch: main · created: 2026-10-05
-status: done (offline scope) — live checks pending backend + device
+status: emulator-verified 2026-10-06 (release APK, shop 68246, prd) — no code bugs found
 
 ## NEXT ACTION
-Backend up -> `node scripts/smoke.mjs <shopId> [jwt]`. Then install
-android/app/build/outputs/apk/release/app-release.apk on a phone/emulator and run the README checklist.
-Emulator could not boot here (needs ~4 GB free RAM; 3.7 GB free while other programs were open).
+1. Test on a real counter phone (ideally Xiaomi/Oppo/Vivo/Realme) — emulator is a clean Pixel image.
+2. Real release keystore (README "Release APK"); current APK is debug-signed.
+3. Backend: VENDOR push (docs/BACKEND-PUSH.md) + register com.quickverse.vendor in Firebase.
+4. Untested: Handover button enabling at rider ARRIVED_AT_STORE (needs a real rider).
+
+## Live test results (2026-10-05/06, emulator Medium_Phone_API_37.0, Android 17)
+- smoke.mjs 68246: 4/4 PASS. Note: STOMP CONNECT is accepted with an EMPTY token (backend does not check it).
+- PASS: OTP login + "Live" · ring on Silent with screen locked (full_screen_intent wakes screen, alarm vol 2→7→2)
+  · accept on phone stops ring · accept on web stops ring (~instant via socket nudge) · two orders ring until
+  both handled · reject (empty reason blocked) · customer cancel stops ring · Mark ready → Ready, Handover
+  disabled until rider arrives · Test sound = 2.0s and ignored during a real ring · cold reboot: BootReceiver
+  starts watcher ~50s after boot and rings for an order placed while the phone was off · backend 502 outage
+  (22:44–22:46): "No connection — retrying", auto-recovered · log out: watcher stops, new order does not ring.
+- Observed, not changed: socket reconnect retries every 5s with no backoff during an outage (harmless; the
+  poll covers it). Emulator runs launched by Claude are capped at 2h — let the user start the emulator.
 
 ## Handoff (read first in a new session)
 - Read: this file, PLAN.md (original plan; Architecture section superseded below), README.md, docs/BACKEND-PUSH.md.
@@ -42,7 +54,6 @@ Emulator could not boot here (needs ~4 GB free RAM; 3.7 GB free while other prog
 - [x] T09 Gate: tsc, eslint, jest 17/17, gradle testDebugUnitTest 21/21, assembleDebug, assembleRelease
 
 ## Unverified (needs live backend / device)
-- WS raw path /quickVerse/ws/websocket accepts STOMP CONNECT (smoke.mjs proves it).
-- JWT lifetime; backend VENDOR push (docs/BACKEND-PUSH.md).
+- JWT lifetime (expiry logout path not exercised live); backend VENDOR push (docs/BACKEND-PUSH.md).
 - `google-services.json` in repo root is for com.quickverse / com.quickverseadmin_ui only — a
   com.quickverse.vendor entry must be registered before it goes to android/app/.
