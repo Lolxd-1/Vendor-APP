@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AppState, FlatList, PermissionsAndroid, Platform, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { OrderCard } from '../components/OrderCard';
 import { SetupChecklist } from '../components/SetupChecklist';
 import { byPhase, type Board } from '../domain/board';
 import type { OrderPhase } from '../domain/order';
-import { getBoard, getSetupStatus, logout, onBoardChanged, playTestSound, pollNow, type Session } from '../native/vendor';
+import type { StoreStatusApi } from '../hooks/useStoreStatus';
+import { logout, playTestSound, type Session, type SetupStatus } from '../native/vendor';
 import { Button } from '../ui/Button';
 import { colors, ui } from '../ui/theme';
 
@@ -14,47 +15,25 @@ const TABS: { phase: OrderPhase; label: string; empty: string }[] = [
   { phase: 'READY_FOR_PICKUP', label: 'Ready', empty: 'Nothing waiting for a rider.' },
 ];
 
-const requestNotificationPermission = async () => {
-  if (Platform.OS === 'android' && Platform.Version >= 33) {
-    await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
-  }
-};
+export interface OrdersScreenProps {
+  session: Session;
+  board: Board;
+  setup: SetupStatus;
+  store: StoreStatusApi;
+  shopName: string | null;
+  segment: OrderPhase;
+  onSegment: (phase: OrderPhase) => void;
+  onOpenAlerts: () => void;
+}
 
-export const OrdersScreen = ({ session }: { session: Session }) => {
-  const [board, setBoard] = useState<Board>(getBoard);
-  const [setup, setSetup] = useState(getSetupStatus);
-  const [tab, setTab] = useState<OrderPhase>('PENDING');
+// Board, setup status and the "new order brings New to the front" rule live in MainShell; this screen shows them.
+export const OrdersScreen = ({ session, board, setup, segment: tab, onSegment: setTab }: OrdersScreenProps) => {
   const [now, setNow] = useState(Date.now());
 
-  const refresh = useCallback(() => {
-    setBoard(getBoard());
-    setSetup(getSetupStatus());
-  }, []);
-
   useEffect(() => {
-    requestNotificationPermission().finally(refresh);
-    const boardSub = onBoardChanged(() => setBoard(getBoard()));
-    const appSub = AppState.addEventListener('change', state => {
-      if (state === 'active') {
-        refresh();
-        pollNow();
-      }
-    });
     const tick = setInterval(() => setNow(Date.now()), 1000);
-    return () => {
-      boardSub.remove();
-      appSub.remove();
-      clearInterval(tick);
-    };
-  }, [refresh]);
-
-  // A new order always brings the New tab to the front.
-  const pendingCount = byPhase(board, 'PENDING').length;
-  const lastPending = useRef(pendingCount);
-  useEffect(() => {
-    if (pendingCount > lastPending.current) setTab('PENDING');
-    lastPending.current = pendingCount;
-  }, [pendingCount]);
+    return () => clearInterval(tick);
+  }, []);
 
   const confirmLogout = () =>
     Alert.alert('Log out?', 'New orders will NOT ring on this phone until you log in again.', [

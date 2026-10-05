@@ -20,6 +20,11 @@ jest.mock('../specs/NativeVendor', () => ({
 }));
 const mockNative = jest.requireMock('../specs/NativeVendor').default;
 
+// Screens fetch store status and shop details on their own; tests must never reach the real backend.
+beforeEach(() => {
+  (globalThis as { fetch: unknown }).fetch = jest.fn(() => Promise.reject(new TypeError('offline')));
+});
+
 // All rendered strings (the JSON tree itself can be circular through FlatList refs).
 const textOf = (r: ReactTestRenderer.ReactTestRenderer): string => {
   const out: string[] = [];
