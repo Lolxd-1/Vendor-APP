@@ -16,3 +16,4 @@
 - 2026-10-05T19:55:11Z T03 gate PASS 1225adf..26a1a4c; dispatch T04 (self)
 - 2026-10-05T19:58:21Z Ruling: T04 high-risk review done by orchestrator (native-call parity check) — why: orch-reviewer not registered (A5) — cost if wrong: a moved subscription misbehaves; covered by shell.test + emulator test
 - 2026-10-05T19:58:37Z T04 gate PASS 80d79a2..5e8709e; dispatch T05 (self)
+- 2026-10-05T19:59:46Z Ruling: T05 write-set += src/app/MainShell.tsx; OrdersScreen prop onOpenTimings; Orders header loses Test sound/Log out (move to T08 pages); label 'Rider OTP' kept — why: schedule-closed sheet must open Store timings; vendors know 'OTP' — cost if wrong: logout unreachable until T08 lands (same run)

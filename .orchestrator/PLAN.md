@@ -263,7 +263,8 @@ export type PageKey = 'timings'|'alerts'
 export const backAction: (s: { tab: TabKey; stack: PageKey[] }) => { tab: TabKey; stack: PageKey[] } | null  // null = let Android handle
 export const MainShell: (p:{ session: Session }) => JSX
 # src/screens/OrdersScreen.tsx  export const OrdersScreen: (p:{ session; board: Board; setup: SetupStatus; store: ReturnType<typeof useStoreStatus>;
-#                                 shopName: string|null; segment: OrderPhase; onSegment: (p: OrderPhase) => void; onOpenAlerts: () => void }) => JSX
+#                                 shopName: string|null; segment: OrderPhase; onSegment: (p: OrderPhase) => void; onOpenAlerts: () => void;
+#                                 onOpenTimings: () => void }) => JSX   (onOpenTimings added by ruling in T05)
 # Strings kept for existing tests: 'Send OTP', 'Shop #', 'No new orders'.
 ```
 
