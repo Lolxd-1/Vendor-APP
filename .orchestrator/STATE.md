@@ -9,7 +9,7 @@ updated: 2026-10-06 · Claude Code / claude-opus-5-5
 
 ## NEXT ACTION
 Code complete and gated on dev-v1.0 (main untouched). Needs the user / a device:
-1. Build + look on the emulator/phone (README "Windows: build from a short path" needs Invalid parameter - Q: — user's OK).
+1. Build + look on the emulator/phone (README "Windows: build from a short path" needs `subst Q:` — user's OK).
 2. On a TEST shop only: Online/Offline switch, Store timings save, History/Insights numbers vs web dashboard.
 3. Carried from vendor-app-v1: real counter phone (Xiaomi/Oppo/Vivo/Realme), release keystore, backend VENDOR push.
 4. Merge dev-v1.0 into main / push to GitHub: user's call (never done by Claude).
