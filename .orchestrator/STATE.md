@@ -1,6 +1,7 @@
 # ORCHESTRATOR STATE
 run: vendor-app-v1 · branch: main · created: 2026-10-05
-status: emulator-verified 2026-10-06 (release APK, shop 68246, prd) — no code bugs found
+status: done
+<!-- was: emulator-verified 2026-10-06 (release APK, shop 68246, prd) — no code bugs found. Closed 2026-10-06 to start run vendor-ui-v1; open items carried over. -->
 
 ## NEXT ACTION
 1. Test on a real counter phone (ideally Xiaomi/Oppo/Vivo/Realme) — emulator is a clean Pixel image.
