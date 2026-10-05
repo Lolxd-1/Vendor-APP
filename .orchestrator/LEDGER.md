@@ -14,3 +14,5 @@
 - 2026-10-05T19:49:52Z T01 gate PASS c9fcd61..add0fd1; dispatch T02 (self)
 - 2026-10-05T19:52:55Z T02 gate PASS 336338d..dac07f7; dispatch T03 (self)
 - 2026-10-05T19:55:11Z T03 gate PASS 1225adf..26a1a4c; dispatch T04 (self)
+- 2026-10-05T19:58:21Z Ruling: T04 high-risk review done by orchestrator (native-call parity check) — why: orch-reviewer not registered (A5) — cost if wrong: a moved subscription misbehaves; covered by shell.test + emulator test
+- 2026-10-05T19:58:37Z T04 gate PASS 80d79a2..5e8709e; dispatch T05 (self)
