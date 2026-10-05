@@ -20,3 +20,4 @@
 - 2026-10-05T20:04:15Z T05 gate PASS b9b88e2..362b6a7; dispatch T06 (self)
 - 2026-10-05T20:06:48Z T06 gate PASS abb7e34..3232b85; dispatch T07 (self)
 - 2026-10-05T20:08:14Z T07 gate PASS ca876a0..de1c0b0; dispatch T08 (self)
+- 2026-10-05T20:08:41Z Ruling: T08 write-set += src/screens/OrdersScreen.tsx (export connection()) — why: one rule for Live/Connecting/No connection — cost if wrong: none

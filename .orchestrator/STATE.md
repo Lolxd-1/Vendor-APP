@@ -21,7 +21,7 @@ verify-all @ab92e97: typecheck PASS, lint PASS, jest 17/17 PASS (3 suites), andr
 - [x] T05 Orders screen, OrderCard, RejectSheet, StoreSwitch — w4 — deps T04 — done b9b88e2..362b6a7 (gate PASS)
 - [x] T06 History + OrderDetailsSheet — w5 — deps T04 — done abb7e34..3232b85 (gate PASS)
 - [x] T07 Insights — w6 — deps T04 — done ca876a0..de1c0b0 (gate PASS)
-- [~] T08 Account, Store timings, Order alerts — w7 — deps T04 — agent=orchestrator attempt=1
+- [~] T08 Account, Store timings, Order alerts — w7 — deps T04 — base=d0a76bb agent=orchestrator attempt=1
 - [ ] T09 Integrate: verify-all, AC1 diff, docs — w8 — deps T05-T08
 <!-- one line per task, starting at column 0 with "- [", e.g.
   - [x] T01 Add Money type — w1 — done 1a2b3c4..5d6e7f8 (gate PASS)
