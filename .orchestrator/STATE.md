@@ -7,6 +7,19 @@ Backend up -> `node scripts/smoke.mjs <shopId> [jwt]`. Then install
 android/app/build/outputs/apk/release/app-release.apk on a phone/emulator and run the README checklist.
 Emulator could not boot here (needs ~4 GB free RAM; 3.7 GB free while other programs were open).
 
+## Handoff (read first in a new session)
+- Read: this file, PLAN.md (original plan; Architecture section superseded below), README.md, docs/BACKEND-PUSH.md.
+- Web reference repo (read-only, do not modify): ../quickverse-web-vendor-dashboard-dev (branch v1.5.2).
+- Build env: JDK 17 at ../.tools/jdk17 (Android Studio's JDK 25 does not work). Windows MAX_PATH ->
+  build from `subst Q:` + `QV_REAL_ROOT` (README "Windows: build from a short path"). Ask the user before
+  running `subst` or any other system-level change.
+- Emulator AVD name: `Medium_Phone_API_37.0` (needs ~4 GB free RAM). adb: %LOCALAPPDATA%\Android\Sdk\platform-tools.
+- google-services.json in the repo root is NOT ours (only com.quickverse / com.quickverseadmin_ui); untracked.
+- User decisions: package com.quickverse.vendor; scope = New/Preparing/Ready tabs; alarm full volume on
+  Silent; expiry = log out like the website; web PC auto-print of phone accepts = deferred; RN stays 0.81.4.
+- Never run order actions (accept/reject/ready/handover) or OTP requests against prd without the user's
+  explicit OK — it is the live production backend.
+
 ## Architecture change (2026-10-05, from Plan-agent verification — supersedes PLAN.md "Architecture")
 - Always-on watcher is NATIVE Kotlin (WatcherService, specialUse FGS): headless-JS timers fire every vsync
   (CPU/OEM kills), one unhandled rejection kills the task, Android 17 blocks background audio outside an FGS.
