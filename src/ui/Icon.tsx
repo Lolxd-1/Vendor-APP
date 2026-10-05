@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, type StyleProp, type TextStyle } from 'react-native';
+import { StyleSheet, Text, type StyleProp, type TextStyle } from 'react-native';
 import { ICONS } from './iconMap';
 import { colors } from './theme';
 
@@ -21,7 +21,11 @@ export const Icon = ({
     allowFontScaling={false}
     accessible={false}
     importantForAccessibility="no"
-    style={[{ fontFamily: 'QVIcons', fontSize: size, lineHeight: size, color, includeFontPadding: false }, style]}>
+    style={[styles.glyph, { fontSize: size, lineHeight: size, color }, style]}>
     {ICONS[name]}
   </Text>
 );
+
+const styles = StyleSheet.create({
+  glyph: { fontFamily: 'QVIcons', includeFontPadding: false },
+});
