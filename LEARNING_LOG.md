@@ -66,3 +66,54 @@ Web dashboard ──accept/reject──▶ backend ──▶ phone notices on ne
 ### Check your understanding
 If the live socket stops working for an hour but the 10-second check still works, will the shop miss
 an order? What changes for them?
+
+## 2026-10-06 — Redesign to a Swiggy/Zomato-style app (branch dev-v1.0)
+
+### What we built
+We turned the 2-screen vendor app into a full partner app in blue and white: four tabs (Orders, History, Insights,
+Account) plus Store timings and Order alerts pages, an Online/Offline switch, and Zomato-style order cards. The
+ringing engine (the Kotlin part that polls, rings and wakes the screen) was not touched by a single line, so the
+order flow that passed the emulator test still works the same way. Everything is on `dev-v1.0`; `main` is unchanged.
+
+### The map
+```
+                      ┌──────────── Native engine (Kotlin) — UNCHANGED ────────────┐
+backend ──orders────▶ │ WatcherService → OrderBook → Ringer (rings while any New)   │
+                      └──────────────┬──────────────────────────▲──────────────────┘
+                         board events │                          │ markLocal + pollNow
+                                      ▼                          │ (after the server said yes)
+ App.tsx ─▶ MainShell (tabs, back button, "new order → Orders > New")
+             ├─ Orders   ── OrderCard ── accept/reject/ready/handover ──▶ backend (PATCH)
+             │             └─ StoreSwitch ── manual-offline ───────────▶ backend (vendor-schedules)
+             ├─ History  ── orders?status&timeRange&page ──────────────▶ backend (GET, 50 per page)
+             ├─ Insights ── dashboard-stats ───────────────────────────▶ backend (GET)
+             └─ Account  ── shop details (inside orders) · Store timings · Order alerts · Log out
+ src/ui = design system (tokens, Plus Jakarta Sans, Lucide icon font, Button, Sheet, lists…)
+```
+
+### What was hard, and how it was solved
+- **"Don't break anything."** We moved only the *window* (screens), never the engine; the button sequence that stops
+  the ring (server → markLocal → pollNow) was copied verbatim and a test checks the exact call order. Final proof:
+  `git diff` of the native code since the start is empty.
+- **No live data allowed.** Reading production was blocked, so reply shapes were taken from the web dashboard's code
+  and every parser shows "--" instead of crashing on odd data.
+- **Store timings mean "closed" hours.** The web stores closure windows (inside = offline). We ported that rule
+  exactly, and fixed one web quirk: saving timings no longer silently switches a closed store back online.
+- **Icons and fonts without new libraries.** Icons are a 18 KB font cut from Lucide; the typeface is bundled as 4
+  files. No native modules, so no new build trouble on Windows.
+- **Test traps:** `resetAllMocks` broke React Native's own fakes (use `clearAllMocks`); a test helper crashed on
+  invisible wrapper nodes.
+
+### Results
+- Tests 17 → 95 (old 17 unchanged), typecheck + lint clean, Android JS bundle builds, slop scan 0.
+- Still to do on a real phone: look and feel, Online switch and Store timings on a test shop, real-device ringing.
+
+### Three concepts learned
+1. **Design tokens** — named design decisions (colors, sizes) used everywhere, like a paint swatch card.
+2. **Stale responses** — when two requests race, only the newest may update the screen; older answers are dropped.
+3. **Write-set + gate** — each task lists the files it may touch; an automatic gate fails it if it touches others or
+   if its tests fail. That is how a big redesign stays safe.
+
+### Check your understanding
+A vendor is on the History tab when a new order arrives. Which part of the app makes the phone ring, and which part
+brings the Orders > New screen to the front? Would going "Offline" stop an order that was already placed from ringing?

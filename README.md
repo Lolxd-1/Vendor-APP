@@ -13,10 +13,20 @@ WatcherService (Kotlin foreground service, always on while logged in)
      + full-screen notification over the lock screen. Nothing else stops it.
 Firebase push NEW_ORDER (optional) → starts the service when the phone killed it.
 BootReceiver → resumes after reboot / app update.
-React Native = screens only: Login (phone + OTP), New / Preparing / Ready tabs, setup checklist.
+React Native = screens only (no ringing logic):
+  Login (phone + OTP) → 4 tabs: Orders (New / Preparing / Ready, Online/Offline switch) · History · Insights · Account
+  + pages: Store timings, Order alerts & phone setup.
 Accept / Reject / Ready / Handover are REST calls from JS, then `markLocal` tells the native board.
 ```
+Screens also read the backend directly (same endpoints as the web dashboard): `dashboard-stats` (Insights),
+`orders` with filters + pages (History), `vendor-schedules` (Online/Offline switch, Store timings). Shop name/logo come
+from `shopDetails` inside orders.
 Session expiry logs the vendor out (same as the website) and posts "Logged out — orders will NOT ring".
+
+## Design
+Blue & white, Apple-minimal, Swiggy/Zomato-style layout: see [docs/DESIGN.md](docs/DESIGN.md) (tokens, type scale,
+components). Fonts (Plus Jakarta Sans) and icons (Lucide subset) are bundled in `android/app/src/main/assets/fonts/`
+and rebuilt with `scripts/make-fonts.py`.
 
 ## Prerequisites (Windows)
 - Node ≥ 20, JDK **17** (not Android Studio's bundled JDK 25). A portable one lives in
@@ -85,6 +95,11 @@ Xiaomi/Oppo/Vivo/Realme: Autostart on. Keep the counter phone on its charger.
 - [ ] Swipe app away, reboot phone → still rings for a new order
 - [ ] Test sound plays ~2s, never silences a real ring
 - [ ] Log out → nothing rings
+- [ ] Orders tab badge shows the New count; from History/Insights/Account a new order jumps to Orders > New
+- [ ] Online switch → "Go offline?" → Offline; customer app can't order; Go online restores (test on a test shop)
+- [ ] Store timings: close today for 30 min → header shows "Closed by store timings"; remove it → Online
+- [ ] History: Today / This week chips, scroll loads more, tap → bill; Insights numbers match the web dashboard
+- [ ] Android back: page → tab → Orders → leaves app
 
 ## Known limits
 - Backend has no TLS: plain HTTP to `prd.quickverse.in` only (`network_security_config.xml`).
