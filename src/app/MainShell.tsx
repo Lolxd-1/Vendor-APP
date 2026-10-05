@@ -105,6 +105,7 @@ export const MainShell = ({ session }: { session: Session }) => {
         segment={segment}
         onSegment={setSegment}
         onOpenAlerts={() => openPage('alerts')}
+        onOpenTimings={() => openPage('timings')}
       />
     ),
     history: <EmptyState icon="history" title="History" />,
