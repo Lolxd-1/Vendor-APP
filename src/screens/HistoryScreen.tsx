@@ -84,6 +84,7 @@ export const HistoryScreen = ({ shopId, onOpenOrder }: { shopId: string; onOpenO
   const [error, setError] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const latest = useRef(0);
+  const failed = useRef<{ page: number; mode: 'first' | 'more' | 'refresh' }>({ page: 0, mode: 'first' });
 
   // Only the newest request may write: quick filter taps never mix two filters' pages.
   const load = useCallback(
@@ -91,6 +92,7 @@ export const HistoryScreen = ({ shopId, onOpenOrder }: { shopId: string; onOpenO
       const id = ++latest.current;
       setLoading(mode);
       setError(null);
+      failed.current = { page, mode };
       try {
         const res = await getOrdersPage(shopId, { statuses: status.statuses, ...queryOf(period), page });
         if (id !== latest.current) return;
@@ -211,7 +213,7 @@ export const HistoryScreen = ({ shopId, onOpenOrder }: { shopId: string; onOpenO
               <Txt variant="footnote" color={colors.red}>
                 {error}
               </Txt>
-              <Button label="Try again" onPress={() => load(list.page + 1, 'more')} variant="secondary" size="s" />
+              <Button label="Try again" onPress={() => load(failed.current.page, failed.current.mode)} variant="secondary" size="s" />
             </View>
           ) : null
         }
@@ -238,7 +240,7 @@ const HistoryRow = ({ order, onPress }: { order: Order; onPress: () => void }) =
         <Txt variant="headline" numberOfLines={1} style={styles.grow}>
           #{order.orderId}
         </Txt>
-        <Txt variant="headline" tabular color={lost ? colors.ink3 : colors.ink} style={styles.fixed}>
+        <Txt variant="headline" tabular numberOfLines={1} color={lost ? colors.ink3 : colors.ink} style={styles.fixed}>
           {amount}
         </Txt>
       </View>

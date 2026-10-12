@@ -123,3 +123,32 @@ test('opening the tab again reloads', async () => {
   await act(async () => r.update(ui(true)));
   expect(api.getAllOrders).toHaveBeenCalledTimes(2);
 });
+
+test("switching weeks never shows the previous week's numbers", async () => {
+  await show();
+  let reject: (e: Error) => void = () => {};
+  api.getAllOrders.mockReturnValueOnce(new Promise((_, rej) => (reject = rej)));
+  await act(async () => byLabel('Previous week').props.onPress());
+  expect(textOf()).not.toContain('₹404.50');
+  expect(textOf()).not.toContain('ID: A');
+  await act(async () => reject(new ApiError('No connection to the server', null)));
+  expect(textOf()).toContain("Couldn't load earnings");
+  expect(textOf()).not.toContain('₹404.50');
+});
+
+test('past weeks say of the week when capped', async () => {
+  await show();
+  api.getAllOrders.mockResolvedValueOnce({ orders: [A], complete: false });
+  await act(async () => byLabel('Previous week').props.onPress());
+  expect(textOf()).toContain('Showing the first 1,000 orders of the week');
+});
+
+test('a failed refresh keeps the numbers and says so once', async () => {
+  await show();
+  await act(async () => r.update(ui(false)));
+  api.getAllOrders.mockRejectedValueOnce(new ApiError('Try again.', 500));
+  await act(async () => r.update(ui(true)));
+  expect(textOf()).toContain('₹404.50');
+  expect(textOf()).toContain('Showing the last numbers.');
+  expect(textOf()).not.toContain('..');
+});

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SectionList, Text, TextInput } from 'react-native';
+import { RefreshControl, SectionList, Text, TextInput } from 'react-native';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { ApiError } from '../src/api/client';
 import * as endpoints from '../src/api/endpoints';
@@ -169,4 +169,15 @@ test('a later page error keeps the list and offers a retry', async () => {
   expect(textOf()).toContain('#A1');
   expect(textOf()).toContain('No connection to the server');
   expect(textOf()).toContain('Try again');
+});
+
+test('a failed pull-to-refresh retries page 0', async () => {
+  api.getOrdersPage.mockResolvedValueOnce({ orders: [delivered], totalPages: 2 });
+  api.getOrdersPage.mockRejectedValueOnce(new ApiError('No connection to the server', null));
+  api.getOrdersPage.mockResolvedValue({ orders: [delivered], totalPages: 2 });
+  await show();
+  await act(async () => r.root.findByType(RefreshControl).props.onRefresh());
+  expect(textOf()).toContain('No connection to the server');
+  await press('Try again');
+  expect(api.getOrdersPage).toHaveBeenLastCalledWith('7', expect.objectContaining({ page: 0 }));
 });

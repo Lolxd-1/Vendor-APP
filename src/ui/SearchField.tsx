@@ -26,7 +26,7 @@ export const SearchField = ({
       returnKeyType="search"
     />
     {value !== '' && (
-      <Pressable accessibilityLabel="Clear search" hitSlop={8} onPress={() => onChange('')}>
+      <Pressable accessibilityLabel="Clear search" hitSlop={13} onPress={() => onChange('')}>
         <Icon name="x" size={18} color={colors.ink3} />
       </Pressable>
     )}

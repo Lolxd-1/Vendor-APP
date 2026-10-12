@@ -15,7 +15,9 @@ const Radio = ({ label, on, onPress }: { label: string; on: boolean; onPress: ()
     accessibilityState={{ checked: on }}
     accessibilityLabel={label}
     style={[styles.row, on && styles.rowOn]}>
-    <Txt variant="body">{label}</Txt>
+    <Txt variant="body" numberOfLines={1}>
+      {label}
+    </Txt>
     {on && <Icon name="check" size={20} color={colors.blue} />}
   </Pressable>
 );

@@ -135,6 +135,22 @@ describe('tabs', () => {
     await act(async () => r.unmount());
   });
 
+  it('returning from an order page does not reload Earnings', async () => {
+    loggedIn();
+    const r = await renderApp();
+    await act(async () => byLabel(r, 'Earnings').props.onPress());
+    const orderCalls = () => fetchMock.mock.calls.filter(c => String(c[0]).includes('/orders')).length;
+    const before = orderCalls();
+    expect(before).toBeGreaterThan(0);
+    await act(async () =>
+      r.root.find(n => String(n.props?.accessibilityLabel).startsWith('Order H1, net receivable') && !!n.props.onPress).props.onPress(),
+    );
+    expect(textOf(r)).toContain('Order #H1');
+    await act(async () => byLabel(r, 'Back').props.onPress());
+    expect(orderCalls()).toBe(before);
+    await act(async () => r.unmount());
+  });
+
   it('a new order closes the order page', async () => {
     loggedIn();
     const r = await renderApp();

@@ -36,7 +36,7 @@ const requestNotificationPermission = async () => {
   }
 };
 
-// The logged-in app: four tabs over the native order board, plus pages pushed on top (store timings, alerts).
+// The logged-in app: five tabs over the native order board, plus pages pushed on top (store timings, alerts, order details).
 export const MainShell = ({ session }: { session: Session }) => {
   const [board, setBoard] = useState<Board>(getBoard);
   const [setup, setSetup] = useState(getSetupStatus);
@@ -121,7 +121,7 @@ export const MainShell = ({ session }: { session: Session }) => {
     ),
     history: <HistoryScreen shopId={session.shopId} onOpenOrder={showOrder} />,
     earnings: (
-      <EarningsScreen shopId={session.shopId} active={nav.tab === 'earnings' && !page} onOpenOrder={showOrder} />
+      <EarningsScreen shopId={session.shopId} active={nav.tab === 'earnings'} onOpenOrder={showOrder} />
     ),
     insights: <InsightsScreen shopId={session.shopId} board={board} active={nav.tab === 'insights' && !page} />,
     account: <AccountScreen session={session} profile={profile} setup={setup} onOpen={openPage} />,

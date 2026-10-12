@@ -15,10 +15,10 @@ import { Txt } from '../ui/Txt';
 
 const Line = ({ label, value, color, strong }: { label: string; value: string; color?: string; strong?: boolean }) => (
   <View style={styles.line}>
-    <Txt variant={strong ? 'headline' : 'body'} color={strong ? colors.ink : colors.ink2} style={styles.label}>
+    <Txt variant={strong ? 'headline' : 'body'} color={strong ? colors.ink : colors.ink2} numberOfLines={1} style={styles.label}>
       {label}
     </Txt>
-    <Txt variant={strong ? 'headline' : 'body'} color={color} tabular style={styles.value}>
+    <Txt variant={strong ? 'headline' : 'body'} color={color} tabular numberOfLines={1} style={styles.value}>
       {value}
     </Txt>
   </View>
@@ -43,7 +43,7 @@ const OrderCard = ({ order, onOpen }: { order: Order; onOpen: (o: Order) => void
           )}
         </View>
         <View style={styles.details}>
-          <Txt variant="callout" color={colors.blue}>
+          <Txt variant="callout" color={colors.blue} numberOfLines={1}>
             Details
           </Txt>
           <Icon name="chevron-right" size={16} color={colors.blue} />
@@ -77,10 +77,12 @@ export const EarningsScreen = ({
   const [offset, setOffset] = useState(0);
   const week = settlementWeek(new Date(), offset);
   const remote = useRemote(
-    () => getAllOrders(shopId, { statuses: ['COMPLETED'], ...rangeQuery(week) }),
+    () => getAllOrders(shopId, { statuses: ['COMPLETED'], ...rangeQuery(week) }).then(res => ({ ...res, offset })),
     [shopId, offset],
   );
   const { reload } = remote;
+  // Old data survives a reload of the same week only; another week's numbers are never shown.
+  const data = remote.data?.offset === offset ? remote.data : null;
 
   // Fresh numbers every time the tab is opened (the first open is already loading).
   const wasActive = useRef(active);
@@ -89,7 +91,7 @@ export const EarningsScreen = ({
     wasActive.current = active;
   }, [active, reload]);
 
-  const orders = remote.data?.orders;
+  const orders = data?.orders;
   const sum = useMemo(() => (orders ? summarize(orders) : null), [orders]);
   const cards = useMemo(() => (orders ?? []).filter(o => payoutOf(o)), [orders]);
 
@@ -100,7 +102,7 @@ export const EarningsScreen = ({
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={remote.loading && !!remote.data} onRefresh={reload} colors={[colors.blue]} />}>
+      refreshControl={<RefreshControl refreshing={remote.loading && !!data} onRefresh={reload} colors={[colors.blue]} />}>
       <LargeHeader title="Earnings" />
 
       <View style={styles.weekBar}>
@@ -134,8 +136,8 @@ export const EarningsScreen = ({
         </Pressable>
       </View>
 
-      {!remote.data && remote.loading && <ActivityIndicator color={colors.blue} style={styles.spinner} />}
-      {!remote.data && !remote.loading && remote.error && (
+      {!data && remote.loading && <ActivityIndicator color={colors.blue} style={styles.spinner} />}
+      {!data && !remote.loading && remote.error && (
         <EmptyState
           icon="wifi-off"
           title="Couldn't load earnings"
@@ -144,7 +146,7 @@ export const EarningsScreen = ({
         />
       )}
 
-      {sum && remote.data && (
+      {sum && data && (
         <>
           <View style={styles.summary}>
             <Txt variant="callout" color={colors.ink2}>
@@ -166,15 +168,20 @@ export const EarningsScreen = ({
                 {`Commission is estimated at ${DEFAULT_COMMISSION_PCT}% where QuickVerse did not send it.`}
               </Txt>
             )}
-            {!remote.data.complete && (
+            {!data.complete && (
               <Txt variant="footnote" color={colors.ink2}>
-                Showing the first 1,000 orders of this week
+                Showing the first 1,000 orders of {offset === 0 ? 'this' : 'the'} week
               </Txt>
             )}
           </View>
           {!!remote.error && (
             <Txt variant="footnote" color={colors.red} style={styles.stale}>
-              {remote.error}. Showing the last numbers.
+              {remote.error}
+            </Txt>
+          )}
+          {!!remote.error && (
+            <Txt variant="footnote" color={colors.red} style={styles.stale}>
+              Showing the last numbers.
             </Txt>
           )}
 

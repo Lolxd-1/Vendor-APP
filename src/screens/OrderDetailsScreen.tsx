@@ -2,7 +2,7 @@ import React, { type ReactNode } from 'react';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { clockTime, dayTime, historyStatusInfo, money, paymentLabel } from '../domain/format';
 import type { Order } from '../domain/order';
-import { payoutOf } from '../domain/payout';
+import { DEFAULT_COMMISSION_PCT, payoutOf } from '../domain/payout';
 import { timelineOf, type Step } from '../domain/timeline';
 import { StatusPill } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -41,7 +41,7 @@ const Line = ({
       style={styles.label}>
       {label}
     </Txt>
-    <Txt variant={strong ? 'headline' : 'body'} color={color} tabular style={styles.value}>
+    <Txt variant={strong ? 'headline' : 'body'} color={color} tabular numberOfLines={1} style={styles.value}>
       {value}
     </Txt>
   </View>
@@ -59,7 +59,7 @@ const StepRow = ({ step, last }: { step: Step; last: boolean }) => {
         {!last && <View style={styles.connector} />}
       </View>
       <View style={styles.stepBody}>
-        <Txt variant="headline" color={step.done ? colors.ink : colors.ink3}>
+        <Txt variant="headline" color={step.done ? colors.ink : colors.ink3} numberOfLines={1}>
           {step.title}
         </Txt>
         {!!step.detail && (
@@ -152,7 +152,7 @@ export const OrderDetailsScreen = ({ order, onBack }: { order: Order; onBack: ()
             </Txt>
             {payout.estimated && (
               <Txt variant="footnote" color={colors.ink2}>
-                Estimated at 10% because QuickVerse did not send the commission for this order.
+                {`Estimated at ${DEFAULT_COMMISSION_PCT}% because QuickVerse did not send the commission for this order.`}
               </Txt>
             )}
           </>
