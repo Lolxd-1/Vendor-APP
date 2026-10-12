@@ -10,3 +10,6 @@
 - 2026-10-12 plan written: M1 = 8 tasks (T00 orchestrator + T01–T07), 11 ACs, 12 risks; status awaiting-approval
 - 2026-10-12T06:44:36Z owner approved M1 plan (examples E1–E8); status executing
 - 2026-10-12T06:44:37Z dispatch T00
+- 2026-10-12T06:46:09Z gate T00 FAIL (tamper missing-test) head=50bd8e4
+- 2026-10-12T06:46:24Z gate T00 FAIL (tamper missing-test) head=50bd8e4
+- 2026-10-12T06:46:46Z Ruling T00: brief TC1 named a non-existent test; corrected to 'Icon draws its glyph from the icon font'; report commit re-made without the reserved chore(orch) prefix — cost if wrong: none
