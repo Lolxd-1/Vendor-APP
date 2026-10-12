@@ -36,3 +36,6 @@
 - 2026-10-12 Ruling: final-review Minor 7 (calendar restarts instead of swapping) kept — why: matches T03 brief/tests; customPeriod swaps anyway — cost if wrong: none
 - 2026-10-12 Release APK builds (V: subst mapping, x86_64); first attempt failed under memory pressure while the emulator tried to start; emulator needs 4 GB free RAM (had 615 MB)
 - 2026-10-12T07:14:11Z dispatch FIX1
+- 2026-10-12T07:19:00Z gate FIX1 PASS c7987e7..3aa411c
+- 2026-10-12T07:22:00Z FIX1 gate PASS; verify-all PASS 161/161; rereview APPROVE (0 open); release APK built arm64 (--max-workers=1 after an LLVM out-of-memory); V: subst removed
+- 2026-10-12T07:22:00Z finish run=vendor-app-v2
