@@ -1,21 +1,23 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, BackHandler, PermissionsAndroid, Platform, StyleSheet, View } from 'react-native';
 import { byPhase, type Board } from '../domain/board';
-import type { OrderPhase } from '../domain/order';
+import type { Order, OrderPhase } from '../domain/order';
 import { useShopProfile } from '../hooks/useShopProfile';
 import { useStoreStatus } from '../hooks/useStoreStatus';
 import { getBoard, getSetupStatus, onBoardChanged, pollNow, type Session } from '../native/vendor';
 import { AccountScreen } from '../screens/AccountScreen';
 import { AlertsScreen } from '../screens/AlertsScreen';
+import { EarningsScreen } from '../screens/EarningsScreen';
 import { HistoryScreen } from '../screens/HistoryScreen';
 import { InsightsScreen } from '../screens/InsightsScreen';
+import { OrderDetailsScreen } from '../screens/OrderDetailsScreen';
 import { OrdersScreen } from '../screens/OrdersScreen';
 import { StoreTimingsScreen } from '../screens/StoreTimingsScreen';
 import { colors } from '../ui/theme';
 import { TabBar } from './TabBar';
 
-export type TabKey = 'orders' | 'history' | 'insights' | 'account';
-export type PageKey = 'timings' | 'alerts';
+export type TabKey = 'orders' | 'history' | 'earnings' | 'insights' | 'account';
+export type PageKey = 'timings' | 'alerts' | 'order';
 interface Nav {
   tab: TabKey;
   stack: PageKey[];
@@ -41,6 +43,7 @@ export const MainShell = ({ session }: { session: Session }) => {
   const [nav, setNav] = useState<Nav>({ tab: 'orders', stack: [] });
   const [segment, setSegment] = useState<OrderPhase>('PENDING');
   const [visited, setVisited] = useState<TabKey[]>(['orders']);
+  const [openOrder, setOpenOrder] = useState<Order | null>(null);
   const store = useStoreStatus(session.shopId);
   const profile = useShopProfile(session.shopId, board);
 
@@ -93,6 +96,13 @@ export const MainShell = ({ session }: { session: Session }) => {
   };
   const openPage = useCallback((page: PageKey) => setNav(n => ({ ...n, stack: [...n.stack, page] })), []);
   const closePage = useCallback(() => setNav(n => ({ ...n, stack: n.stack.slice(0, -1) })), []);
+  const showOrder = useCallback(
+    (o: Order) => {
+      setOpenOrder(o);
+      openPage('order');
+    },
+    [openPage],
+  );
 
   const page = nav.stack[nav.stack.length - 1];
   const tabs: Record<TabKey, React.ReactNode> = {
@@ -109,7 +119,10 @@ export const MainShell = ({ session }: { session: Session }) => {
         onOpenTimings={() => openPage('timings')}
       />
     ),
-    history: <HistoryScreen shopId={session.shopId} onOpenOrder={() => undefined} />,
+    history: <HistoryScreen shopId={session.shopId} onOpenOrder={showOrder} />,
+    earnings: (
+      <EarningsScreen shopId={session.shopId} active={nav.tab === 'earnings' && !page} onOpenOrder={showOrder} />
+    ),
     insights: <InsightsScreen shopId={session.shopId} board={board} active={nav.tab === 'insights' && !page} />,
     account: <AccountScreen session={session} profile={profile} setup={setup} onOpen={openPage} />,
   };
@@ -130,6 +143,11 @@ export const MainShell = ({ session }: { session: Session }) => {
       {page === 'alerts' && (
         <View style={styles.fill}>
           <AlertsScreen board={board} setup={setup} onBack={closePage} />
+        </View>
+      )}
+      {page === 'order' && openOrder && (
+        <View style={styles.fill}>
+          <OrderDetailsScreen order={openOrder} onBack={closePage} />
         </View>
       )}
       {!page && <TabBar tab={nav.tab} pending={pendingCount} onChange={selectTab} />}

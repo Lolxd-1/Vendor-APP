@@ -9,6 +9,7 @@ import type { TabKey } from './MainShell';
 const TABS: { key: TabKey; label: string; icon: IconName }[] = [
   { key: 'orders', label: 'Orders', icon: 'receipt-text' },
   { key: 'history', label: 'History', icon: 'history' },
+  { key: 'earnings', label: 'Earnings', icon: 'wallet' },
   { key: 'insights', label: 'Insights', icon: 'chart-column' },
   { key: 'account', label: 'Account', icon: 'store' },
 ];
