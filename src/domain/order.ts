@@ -26,6 +26,11 @@ export interface ShopDetails {
   address?: { address?: string; city?: string; state?: string; postalCode?: string } | null;
 }
 
+export interface OrderFinance {
+  commission?: number;
+  commissionRate?: number;
+}
+
 export interface Order {
   orderId: string;
   shopId?: number | string;
@@ -36,6 +41,10 @@ export interface Order {
   creationTime?: string;
   acceptedDate?: string | null;
   readyDate?: string | null;
+  completedDate?: string | null;
+  rejectedDate?: string | null;
+  isSettled?: boolean;
+  finance?: OrderFinance | null;
   preparationTime?: number;
   orderItem?: OrderItem[];
   amountExcludingDeliveryFee?: number;
@@ -55,4 +64,4 @@ export type OrderPhase = 'PENDING' | 'ACCEPTED' | 'READY_FOR_PICKUP';
 
 // Order History filters (web src/types/filters.ts).
 export type HistoryStatus = 'COMPLETED' | 'IN_TRANSIT' | 'REJECTED' | 'CANCELLED' | 'PENDING' | 'ACCEPTED' | 'READY_FOR_PICKUP';
-export type TimeRange = 'TODAY' | 'LAST_WEEK' | 'THIS_MONTH' | 'THIS_YEAR';
+export type TimeRange = 'TODAY' | 'LAST_WEEK' | 'THIS_MONTH' | 'THIS_YEAR' | 'CUSTOM';
