@@ -1,3 +1,4 @@
+import { mergeOrders } from '../domain/history';
 import type { HistoryStatus, Order, TimeRange } from '../domain/order';
 import { parseSchedule, type StoreSchedule, type Week } from '../domain/schedule';
 import { parseStats, type TodayStats } from '../domain/stats';
@@ -52,25 +53,59 @@ export const getDashboardStats = async (shopId: string): Promise<TodayStats> => 
   return stats;
 };
 
+export interface OrdersFilter {
+  statuses?: HistoryStatus[];
+  timeRange?: TimeRange;
+  fromTime?: string;
+  toTime?: string;
+}
+
 export interface OrdersPage {
   orders: Order[];
   totalPages: number;
+  totalElements?: number;
 }
 
-// 50 orders per page, newest first; pages start at 0.
-export const getOrdersPage = async (
-  shopId: string,
-  f: { statuses?: HistoryStatus[]; timeRange?: TimeRange; page: number },
-): Promise<OrdersPage> => {
-  const res = await request<{ response?: { orders?: unknown; totalPages?: unknown } }>(
+// 50 orders per page, newest first; pages start at 0. fromTime/toTime are only sent for CUSTOM.
+export const getOrdersPage = async (shopId: string, f: OrdersFilter & { page: number }): Promise<OrdersPage> => {
+  const custom = f.timeRange === 'CUSTOM';
+  const res = await request<{ response?: { orders?: unknown; totalPages?: unknown; totalElements?: unknown } }>(
     'GET',
     `/quickVerse/v2/order/${encodeURIComponent(shopId)}/orders`,
-    { query: { orderStatus: f.statuses?.length ? f.statuses : undefined, timeRange: f.timeRange, page: f.page } },
+    {
+      query: {
+        orderStatus: f.statuses?.length ? f.statuses : undefined,
+        timeRange: f.timeRange,
+        fromTime: custom ? f.fromTime : undefined,
+        toTime: custom ? f.toTime : undefined,
+        page: f.page,
+      },
+    },
   );
   const orders = Array.isArray(res?.response?.orders)
     ? (res.response.orders as Order[]).filter(o => typeof o?.orderId === 'string')
     : [];
-  return { orders, totalPages: Number(res?.response?.totalPages) || 0 };
+  const page: OrdersPage = { orders, totalPages: Number(res?.response?.totalPages) || 0 };
+  const totalElements = Number(res?.response?.totalElements);
+  if (Number.isFinite(totalElements)) page.totalElements = totalElements;
+  return page;
+};
+
+// Pages are fetched one after another (production backend), never more than maxPages (web fetchAllOrderPages).
+export const getAllOrders = async (
+  shopId: string,
+  f: OrdersFilter,
+  maxPages = 20,
+): Promise<{ orders: Order[]; complete: boolean }> => {
+  const first = await getOrdersPage(shopId, { ...f, page: 0 });
+  const total = Math.max(1, first.totalPages);
+  let orders = mergeOrders([], first.orders);
+  for (let page = 1; page < Math.min(total, maxPages); page++) {
+    const next = await getOrdersPage(shopId, { ...f, page });
+    if (next.orders.length === 0) break;
+    orders = mergeOrders(orders, next.orders);
+  }
+  return { orders, complete: total <= maxPages };
 };
 
 const schedulePath = (shopId: string) => `/v1/vendor-schedules/shop/${encodeURIComponent(shopId)}`;

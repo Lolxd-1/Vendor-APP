@@ -1,6 +1,7 @@
 import { ApiError } from '../src/api/client';
 import {
   acceptOrder,
+  getAllOrders,
   getDashboardStats,
   getOrdersPage,
   getSchedule,
@@ -113,5 +114,76 @@ describe('history, stats and store timings (same contract as the web dashboard)'
       scheduleActive: true,
       operatingHours: '{"Mon":{"openTime":"10:00","closeTime":"11:00"}}',
     });
+  });
+});
+
+describe('custom range and load-all-pages', () => {
+  const base = 'http://prd.quickverse.in/quickVerse/v2/order/7/orders';
+  const pageReply = (ids: string[], totalPages: number) =>
+    reply(200, { response: { orders: ids.map(orderId => ({ orderId })), totalPages } });
+  const idsOf = (r: { orders: { orderId: string }[] }) => r.orders.map(o => o.orderId);
+
+  it('test: CUSTOM sends fromTime and toTime', async () => {
+    reply(200, { response: {} });
+    await getOrdersPage('7', {
+      statuses: ['COMPLETED'],
+      timeRange: 'CUSTOM',
+      fromTime: '2026-10-12T00:00:00',
+      toTime: '2026-10-18T23:59:59',
+      page: 2,
+    });
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${base}?orderStatus=COMPLETED&timeRange=CUSTOM&fromTime=2026-10-12T00%3A00%3A00&toTime=2026-10-18T23%3A59%3A59&page=2`,
+    );
+  });
+
+  it('test: presets never send fromTime or toTime', async () => {
+    reply(200, { response: {} });
+    await getOrdersPage('7', { timeRange: 'TODAY', fromTime: 'x', toTime: 'y', page: 0 });
+    expect(fetchMock.mock.calls[0][0]).toBe(`${base}?timeRange=TODAY&page=0`);
+  });
+
+  it('test: reads totalElements when the backend sends it', async () => {
+    reply(200, { response: { orders: [{ orderId: 'A' }], totalPages: 1, totalElements: 57 } });
+    expect((await getOrdersPage('7', { page: 0 })).totalElements).toBe(57);
+    reply(200, { response: { orders: [{ orderId: 'A' }], totalPages: 1 } });
+    expect((await getOrdersPage('7', { page: 0 })).totalElements).toBeUndefined();
+  });
+
+  it('test: getAllOrders loads every page and keeps the first copy', async () => {
+    pageReply(['A', 'B'], 3);
+    pageReply(['B', 'C'], 3);
+    pageReply(['D'], 3);
+    const r = await getAllOrders('7', { timeRange: 'THIS_MONTH' });
+    expect(idsOf(r)).toEqual(['A', 'B', 'C', 'D']);
+    expect(r.complete).toBe(true);
+    expect(fetchMock.mock.calls.map(c => c[0])).toEqual([
+      `${base}?timeRange=THIS_MONTH&page=0`,
+      `${base}?timeRange=THIS_MONTH&page=1`,
+      `${base}?timeRange=THIS_MONTH&page=2`,
+    ]);
+  });
+
+  it('test: getAllOrders stops at maxPages and says so', async () => {
+    pageReply(['A'], 5);
+    pageReply(['B'], 5);
+    const r = await getAllOrders('7', {}, 2);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(r.complete).toBe(false);
+  });
+
+  it('test: getAllOrders stops on an empty page', async () => {
+    pageReply(['A'], 3);
+    pageReply([], 3);
+    const r = await getAllOrders('7', {});
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(idsOf(r)).toEqual(['A']);
+    expect(r.complete).toBe(true);
+  });
+
+  it('test: getAllOrders fails as a whole when a page fails', async () => {
+    pageReply(['A'], 3);
+    reply(500, { error: { message: 'boom' } });
+    await expect(getAllOrders('7', {})).rejects.toMatchObject({ status: 500 });
   });
 });
