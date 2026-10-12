@@ -27,3 +27,5 @@
 - 2026-10-12T07:00:42Z Ruling T05: write-set += src/app/MainShell.tsx (one line: temporary onOpenOrder no-op) — why: HistoryScreen's new required prop breaks MainShell's typecheck before T07 — cost if wrong: tapping a History row does nothing until T07 lands (same run)
 - 2026-10-12T07:02:16Z gate T05 PASS 3fd0f87..282f152
 - 2026-10-12T07:02:24Z dispatch T06
+- 2026-10-12T07:04:37Z gate T06 PASS 5addc16..81108ab
+- 2026-10-12T07:04:38Z dispatch T07
