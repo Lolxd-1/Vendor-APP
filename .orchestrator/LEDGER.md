@@ -21,3 +21,4 @@
 - 2026-10-12T06:53:14Z dispatch T03
 - 2026-10-12T06:55:53Z gate T03 PASS e0955a0..fe006f2
 - 2026-10-12T06:55:54Z T03 discovery propagated to T05 Notes (stable PeriodSheet value)
+- 2026-10-12T06:55:55Z dispatch T04

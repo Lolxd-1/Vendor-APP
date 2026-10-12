@@ -5,7 +5,7 @@ owner: omkarkudke@gmail.com
 branch: orch/vendor-app-v2
 run-base: ebd3bf3f686da0548b065e53bb9b9ff349a7f6f7
 status: executing
-updated: 2026-10-12T06:55:53Z · Claude Code / claude-opus-5-5
+updated: 2026-10-12T06:55:55Z · Claude Code / claude-opus-5-5
 <!-- status: recon | planning | awaiting-approval | executing | integrating | done | blocked -->
 
 ## NEXT ACTION
@@ -23,7 +23,7 @@ ANDROID_HOME=C:/Users/omkar/AppData/Local/Android/Sdk (needed from M3 on).
 - [x] T01 Domain: order fields, period, payout, timeline — w1 — done 1333037..b598625 (gate PASS)
 - [x] T02 API: CUSTOM range + getAllOrders — w2 — deps T01 — done 40aede8..fa27d89 (gate PASS)
 - [x] T03 SearchField, CalendarRange, PeriodSheet — w3 — deps T00 T01 — done e0955a0..fe006f2 (gate PASS)
-- [ ] T04 Order details page — w4 — deps T00 T01
+- [~] T04 Order details page — w4 — deps T00 T01 — base=PENDING attempt=1
 - [ ] T05 History redesign — w5 — deps T02 T03
 - [ ] T06 Earnings screen — w6 — deps T00 T01 T02
 - [ ] T07 Shell: 5 tabs, order page, wiring — w7 — deps T04 T05 T06
