@@ -8,6 +8,7 @@
 5. Decomposition and waves
 6. Writing briefs an executor cannot misread
 7. Test design
+8. Release and data safety
 
 ## 1. Recon
 
@@ -20,13 +21,19 @@ Scouts (`orch-scout`, one question each, all in one message). Each prompt is `Qu
 
 Restate any CLAUDE.md rule a scout must obey (e.g. "ignore vendor/") in its dispatch; scouts start without it.
 
-Then read yourself: the files you will change, their callers (grep), their tests, and any interface they implement. Record in PLAN under Context map: key files with one-line roles, the data flow in at most 10 lines, and the reuse list. The reuse list is the main defense against duplicated helpers, so make it specific.
+Then read yourself: the files you will change, their callers (grep, or a code-intelligence tool's find-references), their tests, and any interface they implement. Record in PLAN under Context map: key files with one-line roles, the data flow in at most 10 lines, and the reuse list. The reuse list is the main defense against duplicated helpers, so make it specific.
+
+**Safety net.** "Nothing else broke" is only as strong as the tests around the code you change. For each function or endpoint you will modify, find the tests that exercise it. Where behavior you must keep has no test, add an early task that writes characterization tests: they pin today's behavior (inputs and outputs observed on the current code), touch only test files, and must pass before and after the change. Pin observable behavior through public interfaces, not internals.
+
+**Verify (per task).** Fill PLAN's per-task block with fast whole-project checks: the full typecheck or build (`tsc --noEmit`, `mypy`, `go build ./... && go vet ./...`, `cargo check`), the project's migration linter if it has one, and tests related to changed files where the runner supports it (`jest --findRelatedTests`, `nx affected`, `pytest --testmon`). The gate runs it after every task and fails on anything that got worse than the baseline, so a signature change that breaks a caller outside the write-set fails at that task, not at the end.
 
 ## 2. PM lens: from request to acceptance criteria
 
 - Quote the user's request verbatim in PLAN. Restate the goal in one sentence.
 - Who uses this and what job it does for them.
 - Acceptance criteria AC1..ACn: each observable and testable, including the unhappy paths a user would notice. Good: "POST /v1/orders with an expired token returns 401 and body {\"error\":\"token_expired\"}". Bad: "handles auth errors".
+- **Examples** (PLAN's Examples table): 3 to 8 concrete situations in the requester's words, each with today's behavior and the behavior after the change. Include at least one "must not change" example and one unhappy path. Concrete examples catch misunderstandings that abstract criteria hide: a requester who can't read code can still say "no, row 3 is wrong". Each AC cites its examples; each example becomes a named test case.
+- Plain-language summary: what changes for users, what doesn't, what could go wrong and how we'd notice, how to undo it. No jargon. It opens the approval message and the PR.
 - Non-goals: what we will not build. This stops executors from gold-plating and reviewers from widening scope.
 - Assumptions: each with the default you chose. Ask the user only about the ones that change the design.
 - Simplicity check: the smallest design that meets every AC. No speculative flags, options, abstractions, or future-proofing. If a simpler approach than the one the user described exists, say so before planning around theirs.
@@ -79,10 +86,15 @@ The executor is capable but has zero context and follows the brief literally. It
 - Include code only where precision matters (a tricky algorithm, exact SQL, an exact regex). If the brief contains the complete code, route the task to haiku.
 - Test cases as concrete input and expected output, including the edge and error cases from the pre-mortem.
 - Verify block: exact commands that exit non-zero on failure, run fast (focused tests plus typecheck or lint of touched files), and never wait for input: no watch modes (`vitest run`, `CI=1 npm test`, `pytest -q`). No servers left running, no fixed ports, no shared databases unless the task owns them. The executor runs this block through `orch.sh verify`, exactly as the gate will.
-- Write-set: every path the task may change, one per line with a `create:`, `modify:`, `test:` or `delete:` label. Entries match literally, so `app/[id]/page.tsx` is fine; a trailing `/` allows the whole subtree and `*` is a wildcard (use both sparingly). A rename is two lines (delete old, create new). The gate fails on any other changed file.
+  - One command per line; chain dependent commands with `&&`. The gate runs each line as a step and every step's exit code counts (a block with multi-line shell constructs runs as one script and loses per-step results).
+  - Make the runner print each test's name (`pytest -v`, `vitest run --reporter=verbose`, `jest --verbose`, `go test -v -run ...`, `mocha --reporter spec`): the gate checks that every `test:` name in Test cases appears in the output.
+  - Fail on zero tests where the runner allows it (`mocha --fail-zero`, `phpunit --fail-on-empty-test-suite`; never `--passWithNoTests`). The gate also fails a run whose runner reports zero tests (pytest, jest, vitest, mocha, node --test, go test, cargo test, rspec, phpunit, JUnit summaries).
+- Test cases name their tests: `` - TC1 (edge) `test: rejects expired token`: input -> expected ``. Use names the runner will print.
+- Oracle: `fail-before` (default; features and bug fixes: the task's new or changed tests must fail when the gate reverts the code to BASE), `pass-before` (refactors over existing or characterization tests: they must pass on the old code too), or `none` (docs, config, nothing testable; say why in Notes). The gate runs the check; a test that passes without the change tests nothing.
+- Write-set: every path the task may change, one per line with a `create:`, `modify:`, `test:` or `delete:` label. Label every test file and test fixture `test:` (the oracle keeps those and reverts the rest). Entries match literally, so `app/[id]/page.tsx` is fine; wrap a path containing spaces in backticks; a trailing `/` allows the whole subtree; `*` matches within one path segment and `**` across segments (use these sparingly). A rename is two lines (delete old, create new). The gate fails on any other changed file, and the hook stops an executor's edit outside the write-sets of the tasks in progress.
 - Out of scope: the adjacent things a helpful engineer would be tempted to touch.
 - Forbidden phrases: "handle errors appropriately", "add tests", "as needed", "etc.", "similar to T2", TBD. Each one is a guess you are outsourcing to a cheaper model.
-- Risk tier: high for authentication or authorization, money, PII or secrets, concurrency, migrations or data deletion, public API; otherwise med or low.
+- Risk tier: high for authentication or authorization, money, PII or secrets, concurrency, migrations or data deletion, public API, dependencies, CI or infrastructure; otherwise med or low. The gate raises the tier to high by itself when a task's diff touches risky paths (`orch.sh risk`; extend per project in `.orchestrate-policy`), and a high-risk task needs a review before it counts as done.
 - Size check: a brief longer than about 120 lines means the task is too big. Split it.
 
 ## 7. Test design
@@ -93,3 +105,12 @@ The executor is capable but has zero context and follows the brief literally. It
 - Deterministic: no sleeps (use fakes or events), fixed seeds, fixed clocks.
 - Extend existing test files and fixtures before adding new frameworks or helpers.
 - Tests that need running services belong in Phase 4 (you run them after merging), not inside parallel tasks.
+- New tests must fail without the change (Oracle). A test that calls the code and asserts nothing, or asserts only on a mock, fails the gate or the review.
+- Never mark a test as expected to fail, and never regenerate snapshots to make a run pass; a changed snapshot must be one the brief asked for.
+
+## 8. Release and data safety
+
+- **Flags.** New user-visible behavior in a shared production app ships behind a feature flag that defaults to off, using the project's flag system; name it in PLAN's `Release and approval`. Removing the flag is a later task.
+- **Migrations.** Use expand and contract: add the new column or table (nullable or with a default) and write to both; backfill in batches; switch reads; drop the old shape in a later PR, never in the same PR as the code that stops using it. Set lock and statement timeouts. Put the project's migration linter (squawk, strong_migrations, Atlas lint) in `Verify (per task)` when it has one; a passing lint is necessary, not sufficient. Migrations are high risk.
+- **Rollback.** PLAN's Rollback says exactly how to undo: revert commits, turn the flag off, a down-migration if one exists. State what was checked (the revert applies cleanly; the flag defaults to off), not what is hoped.
+- **Small PRs.** Reviewers catch far fewer defects in large diffs. Keep each milestone's diff to a few hundred lines where possible; size L work becomes several PRs, each green on its own.

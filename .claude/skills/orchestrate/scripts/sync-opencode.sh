@@ -8,8 +8,8 @@ ROOT=$(cd "$(dirname "$0")/../../../.." && pwd)
 SRC="$ROOT/.claude/agents"
 DST="$ROOT/.opencode/agents"
 HAIKU=${ORCH_OC_HAIKU:-anthropic/claude-haiku-4-5}
-SONNET=${ORCH_OC_SONNET:-anthropic/claude-sonnet-5}
-OPUS=${ORCH_OC_OPUS:-anthropic/claude-opus-5}
+SONNET=${ORCH_OC_SONNET:-anthropic/claude-sonnet-5-5}
+OPUS=${ORCH_OC_OPUS:-anthropic/claude-opus-5-5}
 
 field() { awk -v k="$1" 'NR > 1 && /^---[ \t]*$/ { exit } index($0, k ": ") == 1 { print substr($0, length(k) + 3); exit }' "$2"; }
 body() { awk 'n >= 2 { print; next } /^---[ \t]*$/ { n++ }' "$1"; }
@@ -29,6 +29,13 @@ deny_common='  - action: subagent
   - action: websearch
     resource: "*"
     effect: deny'
+# opencode has no Claude Code hooks: deny the worst shell commands here (the last matching rule wins).
+for c in "git push*" "git reset*" "git checkout*" "git switch*" "git rebase*" "git stash*" "git merge*" "git commit --amend*"          "git commit --no-verify*" "npm install*" "npm i *" "npm ci*" "pnpm add*" "pnpm install*" "yarn add*" "pip install*"          "pip3 install*" "uv add*" "poetry add*" "cargo add*" "go get*" "terraform*" "kubectl*" "helm*" "gh *" "rm -rf /*" "rm -rf ~*"; do
+  deny_common="$deny_common
+  - action: shell
+    resource: \"$c\"
+    effect: deny"
+done
 
 only_writes() {
   printf '  - action: edit\n    resource: "*"\n    effect: deny\n  - action: edit\n    resource: "*%s*"\n    effect: allow\n' "$1"

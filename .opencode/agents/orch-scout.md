@@ -20,6 +20,87 @@ permissions:
   - action: websearch
     resource: "*"
     effect: deny
+  - action: shell
+    resource: "git push*"
+    effect: deny
+  - action: shell
+    resource: "git reset*"
+    effect: deny
+  - action: shell
+    resource: "git checkout*"
+    effect: deny
+  - action: shell
+    resource: "git switch*"
+    effect: deny
+  - action: shell
+    resource: "git rebase*"
+    effect: deny
+  - action: shell
+    resource: "git stash*"
+    effect: deny
+  - action: shell
+    resource: "git merge*"
+    effect: deny
+  - action: shell
+    resource: "git commit --amend*"
+    effect: deny
+  - action: shell
+    resource: "git commit --no-verify*"
+    effect: deny
+  - action: shell
+    resource: "npm install*"
+    effect: deny
+  - action: shell
+    resource: "npm i *"
+    effect: deny
+  - action: shell
+    resource: "npm ci*"
+    effect: deny
+  - action: shell
+    resource: "pnpm add*"
+    effect: deny
+  - action: shell
+    resource: "pnpm install*"
+    effect: deny
+  - action: shell
+    resource: "yarn add*"
+    effect: deny
+  - action: shell
+    resource: "pip install*"
+    effect: deny
+  - action: shell
+    resource: "pip3 install*"
+    effect: deny
+  - action: shell
+    resource: "uv add*"
+    effect: deny
+  - action: shell
+    resource: "poetry add*"
+    effect: deny
+  - action: shell
+    resource: "cargo add*"
+    effect: deny
+  - action: shell
+    resource: "go get*"
+    effect: deny
+  - action: shell
+    resource: "terraform*"
+    effect: deny
+  - action: shell
+    resource: "kubectl*"
+    effect: deny
+  - action: shell
+    resource: "helm*"
+    effect: deny
+  - action: shell
+    resource: "gh *"
+    effect: deny
+  - action: shell
+    resource: "rm -rf /*"
+    effect: deny
+  - action: shell
+    resource: "rm -rf ~*"
+    effect: deny
   - action: edit
     resource: "*"
     effect: deny
@@ -36,8 +117,8 @@ The dispatch gives one question, an OUT path under `.orchestrator/recon/`, and s
 
 ## Rules
 
-- Read-only. The only file you write is OUT. Use Bash only for read-only commands: `git log`, `git show`, `git grep`, `git ls-files`, `ls`, `find`, `head`, `wc`. Never install, build, run test suites, start servers, or change git state.
-- Search before reading: Grep and Glob first, then read only the relevant ranges. Skip vendored, generated, and build output (node_modules, dist, build, .venv, vendor, lockfiles) unless the question is about them.
+- Read-only. The only file you write is OUT. Use Bash only for read-only commands: `git log`, `git show`, `git grep`, `git ls-files`, `ls`, `find`, `head`, `wc`. Never install, build, run test suites, start servers, change git state, or read `.env` files.
+- Search before reading: Grep and Glob first (or a code-intelligence tool's find-references, when one is available, for callers of a symbol), then read only the relevant ranges. Skip vendored, generated, and build output (node_modules, dist, build, .venv, vendor, lockfiles) unless the question is about them.
 - Every claim carries `path:line`. Quote at most 3 lines of code per item; prefer signatures.
 - Facts only. Mark anything you inferred as "(inferred)". If you can't find something, write "not found" and list where you looked. Never invent a symbol, path, or command.
 - Stop as soon as the question is answered. Don't propose designs unless asked.

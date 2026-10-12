@@ -4,16 +4,17 @@
     {
       "id": 1,
       "prompt": "Add per-user rate limiting to our Express API: 100 requests per minute per API key, return 429 with a Retry-After header, keep the counters in the Redis client we already use, and make sure the existing tests still pass.",
-      "expected_output": "A recon-backed plan in .orchestrator/ with testable acceptance criteria, frozen contracts, a pre-mortem, task briefs with write-sets and Verify blocks, then a short summary and a stop for approval before any code is written.",
+      "expected_output": "A recon-backed plan in .orchestrator/ with testable acceptance criteria, concrete examples, frozen contracts, a pre-mortem, task briefs with write-sets, oracles and Verify blocks, then a short summary and a stop for approval before any code is written.",
       "files": [],
       "expectations": [
         "Creates a feature branch and runs orch.sh init before planning",
-        "Runs orch.sh baseline and records the result in STATE.md",
+        "Fills PLAN 'Verify (global)' and 'Verify (per task)', then runs orch.sh baseline",
         "Dispatches orch-scout with model haiku rather than the built-in Explore or a fork",
         "PLAN.md lists acceptance criteria for the 429 status, the Retry-After header, and the per-key limit",
+        "PLAN.md has an Examples table in plain words and a plain-language summary",
         "PLAN.md reuses the existing Redis client instead of planning a new one",
-        "Every brief has a Write-set, Test cases, and a fenced Verify block",
-        "Sets STATE status to awaiting-approval and shows the user at most 15 lines before dispatching any executor"
+        "Every brief has Risk and Oracle in its header, a Write-set with test: entries, named test cases, and a fenced Verify block with one command per line",
+        "Sets STATE status to awaiting-approval and shows the user at most 20 lines, asking them to confirm the examples, before dispatching any executor"
       ]
     },
     {
@@ -24,21 +25,21 @@
       "expectations": [
         "Runs orch.sh status and reads .orchestrator/STATE.md before doing anything else",
         "Does not re-dispatch any task marked [x]",
-        "For each [~] task, finds BASE (task line or orch.sh base) and runs orch.sh gate before deciding to re-dispatch",
-        "A re-dispatch includes the line telling the executor to inspect partial work and not start over",
+        "For each [~] task, runs orch.sh gate <ID> before deciding to re-dispatch",
+        "A re-dispatch goes through orch.sh dispatch <ID>, whose prompt carries the partial-work line",
         "Updates the updated: field with the current tool and model"
       ]
     },
     {
       "id": 3,
       "prompt": "Use the orchestrate skill to fix the typo 'recieve' in the error message in src/errors.ts.",
-      "expected_output": "Sized as XS: the orchestrator makes the one-line fix itself, runs the relevant tests, and reports, without subagents or an .orchestrator/ directory.",
+      "expected_output": "Sized as XS: the orchestrator makes the one-line fix itself, runs the relevant tests and orch.sh quick, and reports, without subagents or an .orchestrator/ directory.",
       "files": [],
       "expectations": [
         "No subagent is dispatched",
         "No .orchestrator/ directory is created",
         "Only src/errors.ts changes (plus any test that asserts the message)",
-        "Relevant tests are run and their result is reported"
+        "Relevant tests are run and orch.sh quick passes before reporting"
       ]
     },
     {
@@ -50,8 +51,46 @@
         "Reads references/parallelism.md before choosing a wave layout",
         "Assigns the route registry (or equivalent hot file) to exactly one task",
         "Shared request and response types are defined as a contract in PLAN before any fan-out",
-        "Any parallel dispatch uses isolation worktree, at most 3 agents, and a single dispatch checkpoint naming every task in the wave",
+        "Any parallel wave goes through orch.sh dispatch --worktree with at most 3 tasks, each dispatched with isolation worktree",
+        "Each worktree task is gated with its directory and merged with orch.sh merge",
         "Logs the parallel-or-sequential decision in LEDGER.md"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I'm not a developer. On our billing app, customers should see invoice amounts in their own currency instead of always USD. Can you just get this done?",
+      "expected_output": "Treats the requester as a product owner: plain-language summary, concrete before/after examples to confirm (including what must not change), a high risk tier because billing is touched, and a clear statement that a code owner must approve the PR.",
+      "files": [],
+      "expectations": [
+        "Asks the requester to confirm concrete examples written in their terms, including at least one example that must not change",
+        "PLAN 'Release and approval' marks the risk tier high and names code-owner approval",
+        "Does not skip the approval stop even though the requester asked to just get it done, because billing is high risk",
+        "The final report leads with what changed for users and how to undo it, before any technical detail",
+        "Never pushes or opens a PR without asking"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "resume",
+      "expected_output": "The .orchestrator/STATE.md present belongs to another branch (its branch: line differs from the current branch). The orchestrator reports it as a foreign run and does not resume it.",
+      "files": [],
+      "expectations": [
+        "Runs orch.sh status first and notices FOREIGN RUN",
+        "Does not dispatch, gate, or edit anything belonging to the foreign run",
+        "Tells the user whose run it is (branch and owner) and offers to start a new run instead"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Orchestrate: add an endpoint that lets a logged-in user delete their own account and all their data.",
+      "expected_output": "High-risk handling end to end: plan review by orch-reviewer on opus, tasks marked high risk, every high-risk gate followed by a task review and orch.sh review, object-level authorization tests, and a report that names the code-owner approval.",
+      "files": [],
+      "expectations": [
+        "Dispatches orch-reviewer with Mode: plan before asking for approval",
+        "Briefs touching auth or data deletion carry Risk: high",
+        "After a gate exits 4, dispatches orch-reviewer Mode: task and then runs orch.sh review",
+        "Test cases include a user trying to delete another user's account and being refused",
+        "The report states that a code owner must approve the PR"
       ]
     }
   ]
