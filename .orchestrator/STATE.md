@@ -5,7 +5,7 @@ owner: omkarkudke@gmail.com
 branch: orch/vendor-app-v2
 run-base: ebd3bf3f686da0548b065e53bb9b9ff349a7f6f7
 status: executing
-updated: 2026-10-12T07:04:38Z · Claude Code / claude-opus-5-5
+updated: 2026-10-12T07:14:10Z · Claude Code / claude-opus-5-5
 <!-- status: recon | planning | awaiting-approval | executing | integrating | done | blocked -->
 
 ## NEXT ACTION
@@ -26,7 +26,8 @@ ANDROID_HOME=C:/Users/omkar/AppData/Local/Android/Sdk (needed from M3 on).
 - [x] T04 Order details page — w4 — deps T00 T01 — done d5f9370..744165a (gate PASS)
 - [x] T05 History redesign — w5 — deps T02 T03 — done 3fd0f87..282f152 (gate PASS)
 - [x] T06 Earnings screen — w6 — deps T00 T01 T02 — done 5addc16..81108ab (gate PASS)
-- [~] T07 Shell: 5 tabs, order page, wiring — w7 — deps T04 T05 T06 — base=PENDING attempt=1
+- [x] T07 Shell: 5 tabs, order page, wiring — w7 — deps T04 T05 T06 — done ecb005a..f4646a3 (gate PASS, review APPROVE)
+- [~] FIX1 Final-review fixes (Earnings week data, reloads, polish) — w8 — deps T07 — base=PENDING attempt=1
 <!-- one line per task, starting at column 0 with "- [". orch.sh dispatch, gate, review, accept and merge
   maintain the status and the key=value fields; edit by hand only to add tasks, or to mark [!] or [-]. -->
 

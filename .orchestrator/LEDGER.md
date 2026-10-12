@@ -29,3 +29,10 @@
 - 2026-10-12T07:02:24Z dispatch T06
 - 2026-10-12T07:04:37Z gate T06 PASS 5addc16..81108ab
 - 2026-10-12T07:04:38Z dispatch T07
+- 2026-10-12T07:08:28Z gate T07 PASS head=f4646a3 (high risk: review required)
+- 2026-10-12T07:09:00Z review T07 APPROVE: done
+- 2026-10-12 phase4: verify-all PASS (156 tests, bundle ok); frozen native diff = QVIcons.ttf only; slop 0; final review (opus) CHANGES_REQUIRED: 1 critical (cross-week stale Earnings data), 1 important (reload on return from order page), 9 minor -> FIX1
+- 2026-10-12 Ruling: final-review Minor 5 (date labels across midnight) deferred to M5 — why: rare for an open app, needs AppState plumbing — cost if wrong: labels say Today for yesterday's list until reopened
+- 2026-10-12 Ruling: final-review Minor 7 (calendar restarts instead of swapping) kept — why: matches T03 brief/tests; customPeriod swaps anyway — cost if wrong: none
+- 2026-10-12 Release APK builds (V: subst mapping, x86_64); first attempt failed under memory pressure while the emulator tried to start; emulator needs 4 GB free RAM (had 615 MB)
+- 2026-10-12T07:14:11Z dispatch FIX1
