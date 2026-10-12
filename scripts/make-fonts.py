@@ -27,7 +27,7 @@ ICON_NAMES = [
     'bell-ring', 'volume-2', 'wifi', 'wifi-off', 'log-out', 'calendar-clock', 'info', 'triangle-alert', 'map-pin',
     'user-round', 'shield-check', 'battery-charging', 'smartphone', 'refresh-cw', 'inbox', 'ban', 'circle-x',
     'power', 'settings', 'wallet', 'utensils', 'key-round', 'hand-platter', 'indian-rupee', 'trending-up', 'hash',
-    'message-square-text', 'badge-check',
+    'message-square-text', 'badge-check', 'search', 'calendar', 'chevron-down', 'hourglass',
 ]
 
 

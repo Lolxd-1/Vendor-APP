@@ -46,4 +46,8 @@ export const ICONS = {
   'hash': '\ue0ef',
   'message-square-text': '\ue575',
   'badge-check': '\ue241',
+  'search': '\ue151',
+  'calendar': '\ue063',
+  'chevron-down': '\ue06d',
+  'hourglass': '\ue296',
 } as const;
