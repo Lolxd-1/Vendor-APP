@@ -13,3 +13,5 @@
 - 2026-10-12T06:46:09Z gate T00 FAIL (tamper missing-test) head=50bd8e4
 - 2026-10-12T06:46:24Z gate T00 FAIL (tamper missing-test) head=50bd8e4
 - 2026-10-12T06:46:46Z Ruling T00: brief TC1 named a non-existent test; corrected to 'Icon draws its glyph from the icon font'; report commit re-made without the reserved chore(orch) prefix — cost if wrong: none
+- 2026-10-12T06:47:35Z gate T00 PASS 4e6bd5a..1c13b2a
+- 2026-10-12T06:47:40Z dispatch T01
