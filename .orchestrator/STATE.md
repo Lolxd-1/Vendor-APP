@@ -24,7 +24,7 @@ ANDROID_HOME=C:/Users/omkar/AppData/Local/Android/Sdk (needed from M3 on).
 - [x] T02 API: CUSTOM range + getAllOrders — w2 — deps T01 — done 40aede8..fa27d89 (gate PASS)
 - [x] T03 SearchField, CalendarRange, PeriodSheet — w3 — deps T00 T01 — done e0955a0..fe006f2 (gate PASS)
 - [x] T04 Order details page — w4 — deps T00 T01 — done d5f9370..744165a (gate PASS)
-- [~] T05 History redesign — w5 — deps T02 T03 — base=PENDING attempt=1
+- [~] T05 History redesign — w5 — deps T02 T03 — base=3fd0f878dd attempt=1
 - [ ] T06 Earnings screen — w6 — deps T00 T01 T02
 - [ ] T07 Shell: 5 tabs, order page, wiring — w7 — deps T04 T05 T06
 <!-- one line per task, starting at column 0 with "- [". orch.sh dispatch, gate, review, accept and merge
