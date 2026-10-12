@@ -1,0 +1,4 @@
+1	0	2	npm run typecheck
+2	0	5	npm run lint
+3	0	5	npx jest --ci --silent
+4	0	3	npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output "${TMPDIR:-/tmp}/qv-verify.bundle" --assets-dest "${TMPDIR:-/tmp}/qv-verify-assets" > /dev/null

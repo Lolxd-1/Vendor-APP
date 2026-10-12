@@ -1,30 +1,10 @@
 # LEDGER (append-only, one line per event)
 <!-- format: - <UTC time> <event>. Rulings: "Ruling: <decision> — <why> — <cost if wrong>" -->
-- 2026-10-05T19:31:56Z init run=vendor-ui-v1 branch=dev-v1.0 base=ab92e97
-- 2026-10-06 Ruling: branch named dev-v1.0 (user said 'Dev branch v1.0'; git forbids spaces) — why: closest valid name — cost if wrong: one git branch -m
-- 2026-10-06 Ruling: previous run vendor-app-v1 marked done and archived — why: all 10 tasks [x] + emulator-verified; open items are device/backend, carried to STATE — cost if wrong: none (archive intact)
-- 2026-10-06 Ruling: run autonomously without plan approval stop — why: user handed over the job ('now this is your Job') — cost if wrong: user redirects design after T01; rollback is git switch main
-- 2026-10-06 Ruling: orchestrator executes briefs itself — why: orch-executor not registered in this session (started in parent folder); SKILL.md 'No subagents' path — cost if wrong: more main-session tokens
-- 2026-10-06 Ruling: response shapes from web code, not live prd reads — why: production reads blocked by permission policy — cost if wrong: a field name mismatch shows '--' (parsers tolerant); user-run emulator test catches it
-- 2026-10-06 Ruling: skip Menu/stock, payouts, ratings, complaints, support — why: no backend endpoints; faking would mislead vendors — cost if wrong: added later when endpoints exist
-- 2026-10-06 Ruling: saveSchedule preserves manualOfflineOverride (web sends false) — why: web value would silently reopen a store — cost if wrong: none for vendors
-- 2026-10-06 Ruling: Plus Jakarta Sans + Lucide icon font as bundled assets, zero npm deps — why: no native modules on a MAX_PATH-limited Windows build; brand-fit type — cost if wrong: swap TTFs
-- 2026-10-06 plan written: 9 tasks, 15 ACs, 12 risks; status executing
-- 2026-10-05T19:44:50Z dispatch T01 (self, A5)
-- 2026-10-05T19:49:52Z T01 gate PASS c9fcd61..add0fd1; dispatch T02 (self)
-- 2026-10-05T19:52:55Z T02 gate PASS 336338d..dac07f7; dispatch T03 (self)
-- 2026-10-05T19:55:11Z T03 gate PASS 1225adf..26a1a4c; dispatch T04 (self)
-- 2026-10-05T19:58:21Z Ruling: T04 high-risk review done by orchestrator (native-call parity check) — why: orch-reviewer not registered (A5) — cost if wrong: a moved subscription misbehaves; covered by shell.test + emulator test
-- 2026-10-05T19:58:37Z T04 gate PASS 80d79a2..5e8709e; dispatch T05 (self)
-- 2026-10-05T19:59:46Z Ruling: T05 write-set += src/app/MainShell.tsx; OrdersScreen prop onOpenTimings; Orders header loses Test sound/Log out (move to T08 pages); label 'Rider OTP' kept — why: schedule-closed sheet must open Store timings; vendors know 'OTP' — cost if wrong: logout unreachable until T08 lands (same run)
-- 2026-10-05T20:04:15Z T05 gate PASS b9b88e2..362b6a7; dispatch T06 (self)
-- 2026-10-05T20:06:48Z T06 gate PASS abb7e34..3232b85; dispatch T07 (self)
-- 2026-10-05T20:08:14Z T07 gate PASS ca876a0..de1c0b0; dispatch T08 (self)
-- 2026-10-05T20:08:41Z Ruling: T08 write-set += src/screens/OrdersScreen.tsx (export connection()) — why: one rule for Live/Connecting/No connection — cost if wrong: none
-- 2026-10-05T20:11:07Z T08 gate PASS d0a76bb..0210cd3; dispatch T09 (self)
-- 2026-10-05T20:12:31Z phase4: verify-all PASS (95/95, bundle ok), AC1 diff empty, slop 0; final review by orchestrator (A5) -> FIX1; T09 paused
-- 2026-10-05T20:13:31Z FIX1 gate PASS c73aa6b..baf2f07; re-dispatch T09 (docs)
-- 2026-10-05T20:14:57Z T09 gate PASS df61c9a..5e896ef; verify-all PASS 95/95; status done (device checks pending, see NEXT ACTION)
-- 2026-10-05T20:15:11Z Note: a backtick in an unquoted heredoc made the shell call 'subst Q:' with no path; Windows rejected it (Invalid parameter), no mapping created (subst listing checked). STATE text fixed.
-- 2026-10-05T20:15:28Z Clarification: Q: => quickverse-vendor-app mapping pre-exists (earlier build session); the stray 'subst Q:' had no target and could not create it. Left untouched.
-- 2026-10-05T20:28:57Z Post-run fix (XS, emulator finding): History chip rows flexGrow 0; jest 95/95. Emulator had been started with -no-audio by Claude -> restarted with audio; app alarm playback confirmed (USAGE_ALARM, vol 7/7).
+- 2026-10-12T06:01:41Z init run=vendor-app-v2 branch=orch/vendor-app-v2 base=ebd3bf3 owner=omkarkudke@gmail.com
+- 2026-10-12 Ruling: size L -> 6 milestones (docs/ROADMAP.md); this run = M1 (History, Order details, Earnings) — why: each milestone ends green and is reviewable alone — cost if wrong: re-plan order of milestones
+- 2026-10-12 Ruling: payout = gross − commission only (owner answer); commission from finance.commission when present else 10% estimate labelled "estimated" — why: owner rule + PC dashboard default — cost if wrong: one constant
+- 2026-10-12 Ruling: no calls to GET /quickVerse/v2/order/{id} in M1 — why: vendor-origin access unverified; production read check blocked by classifier — cost if wrong: completed/rejected times show "—" until a later task adds it
+- 2026-10-12 Ruling: sequential execution, no worktrees — why: cold jest cache in fresh worktrees timed out 2 tests at baseline; MainShell hot file — cost if wrong: ~45 min wall-clock
+- 2026-10-12 Ruling R-H1: T05 rewrites history test "tapping an order opens its bill" into "opens its page"; T04 keeps 'Items total' and '2 × Veg Biryani' — why: bill moves to the Order details page — cost if wrong: none
+- 2026-10-12 Ruling: auto-accept + PC sync designed in docs/AUTO-ACCEPT.md before any code (owner asked for full logic cases first) — cost if wrong: design revision before M2/M4
+- 2026-10-12 plan written: M1 = 8 tasks (T00 orchestrator + T01–T07), 11 ACs, 12 risks; status awaiting-approval
