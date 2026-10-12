@@ -86,8 +86,8 @@ export const getOrdersPage = async (shopId: string, f: OrdersFilter & { page: nu
     ? (res.response.orders as Order[]).filter(o => typeof o?.orderId === 'string')
     : [];
   const page: OrdersPage = { orders, totalPages: Number(res?.response?.totalPages) || 0 };
-  const totalElements = Number(res?.response?.totalElements);
-  if (Number.isFinite(totalElements)) page.totalElements = totalElements;
+  const totalElements = res?.response?.totalElements;
+  if (typeof totalElements === 'number' && Number.isFinite(totalElements)) page.totalElements = totalElements;
   return page;
 };
 

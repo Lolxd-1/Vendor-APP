@@ -148,6 +148,8 @@ describe('custom range and load-all-pages', () => {
     expect((await getOrdersPage('7', { page: 0 })).totalElements).toBe(57);
     reply(200, { response: { orders: [{ orderId: 'A' }], totalPages: 1 } });
     expect((await getOrdersPage('7', { page: 0 })).totalElements).toBeUndefined();
+    reply(200, { response: { orders: [{ orderId: 'A' }], totalPages: 1, totalElements: null } });
+    expect((await getOrdersPage('7', { page: 0 })).totalElements).toBeUndefined();
   });
 
   it('test: getAllOrders loads every page and keeps the first copy', async () => {
