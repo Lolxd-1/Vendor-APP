@@ -8,3 +8,5 @@
 - 2026-10-12 Ruling R-H1: T05 rewrites history test "tapping an order opens its bill" into "opens its page"; T04 keeps 'Items total' and '2 × Veg Biryani' — why: bill moves to the Order details page — cost if wrong: none
 - 2026-10-12 Ruling: auto-accept + PC sync designed in docs/AUTO-ACCEPT.md before any code (owner asked for full logic cases first) — cost if wrong: design revision before M2/M4
 - 2026-10-12 plan written: M1 = 8 tasks (T00 orchestrator + T01–T07), 11 ACs, 12 risks; status awaiting-approval
+- 2026-10-12T06:44:36Z owner approved M1 plan (examples E1–E8); status executing
+- 2026-10-12T06:44:37Z dispatch T00
