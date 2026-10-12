@@ -109,7 +109,7 @@ export const MainShell = ({ session }: { session: Session }) => {
         onOpenTimings={() => openPage('timings')}
       />
     ),
-    history: <HistoryScreen shopId={session.shopId} />,
+    history: <HistoryScreen shopId={session.shopId} onOpenOrder={() => undefined} />,
     insights: <InsightsScreen shopId={session.shopId} board={board} active={nav.tab === 'insights' && !page} />,
     account: <AccountScreen session={session} profile={profile} setup={setup} onOpen={openPage} />,
   };
