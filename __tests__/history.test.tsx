@@ -88,7 +88,7 @@ test('tapping an order opens its page', async () => {
   api.getOrdersPage.mockResolvedValue({ orders: [delivered], totalPages: 1 });
   await show();
   await press('Order A1, Delivered, ₹245');
-  expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ orderId: 'A1' }));
+  expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ orderId: 'A1' }), undefined); // no order here carries a rate
 });
 
 test('groups orders by day with totals', async () => {

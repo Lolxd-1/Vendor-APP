@@ -59,6 +59,7 @@ const OrderCard = ({ order, pct, onOpen }: { order: Order; pct: number; onOpen: 
       <View style={styles.hairline} />
       <Line label="Gross revenue" value={money(p.gross)} />
       <Line label={commissionLabel(p)} value={money(-p.commission)} />
+      {p.commissionGst > 0 && <Line label="GST on commission" value={money(-p.commissionGst)} />}
       <Line label="Net receivable" value={money(p.net)} strong />
     </Pressable>
   );
@@ -72,7 +73,7 @@ export const EarningsScreen = ({
 }: {
   shopId: string;
   active: boolean;
-  onOpenOrder: (o: Order) => void;
+  onOpenOrder: (o: Order, commissionPct?: number) => void;
 }) => {
   const [offset, setOffset] = useState(0);
   const week = settlementWeek(new Date(), offset);
@@ -195,7 +196,7 @@ export const EarningsScreen = ({
                 Orders
               </Txt>
               {cards.map(o => (
-                <OrderCard key={o.orderId} order={o} pct={pct} onOpen={onOpenOrder} />
+                <OrderCard key={o.orderId} order={o} pct={pct} onOpen={x => onOpenOrder(x, pct)} />
               ))}
             </>
           )}

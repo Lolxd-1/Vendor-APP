@@ -116,7 +116,7 @@ export const CalendarRange = ({
       </View>
       <View style={styles.week}>
         {WEEKDAY_LETTERS.map((w, i) => (
-          <View key={i} style={styles.cell}>
+          <View key={i} style={styles.weekday}>
             <Txt variant="caption" color={colors.ink3} maxFontSizeMultiplier={MAX_FONT_SCALE}>
               {w}
             </Txt>
@@ -138,7 +138,8 @@ const styles = StyleSheet.create({
   off: { opacity: 0.35 },
   week: { flexDirection: 'row' },
   cell: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  weekday: { flex: 1, height: 24, alignItems: 'center', justifyContent: 'center' },
   band: { backgroundColor: colors.blueSoft },
-  circle: { minWidth: 36, minHeight: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  circle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   circleOn: { backgroundColor: colors.blue },
 });

@@ -74,10 +74,18 @@ test('each order card shows gross, commission and net', async () => {
     expect(text).toContain(s);
 });
 
+test('a card shows GST on commission when the backend sends it, so its lines add up', async () => {
+  const G = { ...B, orderId: 'G', isSettled: false, finance: { itemTotalAmount: 1000, commissionRate: 5, commission: 50, commissionGst: 9 } } as unknown as Order;
+  api.getAllOrders.mockResolvedValue({ orders: [G], complete: true });
+  await show();
+  const text = textOf();
+  expect(text).toContain('Commission (5%) | -₹50 | GST on commission | -₹9 | Net receivable | ₹941');
+});
+
 test('a card opens the order', async () => {
   await show();
   act(() => byLabel('Order A, net receivable ₹225').props.onPress());
-  expect(onOpenOrder).toHaveBeenCalledWith(A);
+  expect(onOpenOrder).toHaveBeenCalledWith(A, 8); // the shop rate travels with it, so the details page estimates the same
 });
 
 test('week arrows move by one week', async () => {

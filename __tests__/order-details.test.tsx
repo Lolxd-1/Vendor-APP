@@ -47,6 +47,22 @@ test('shows the bill', () => {
   for (const s of ['Items total', '₹245', '2 × Veg Biryani', '₹200', '1 × Coke', '₹45']) expect(t).toContain(s);
 });
 
+test('the bill adds up: fees and taxes the customer paid are shown (live order: 1000 + 20 + 11 = 1031)', () => {
+  show({ ...L, amountExcludingDeliveryFee: 1000, deliveryFee: 20, totalAmount: 1031 });
+  const t = textOf();
+  for (const s of ['Items total', '₹1,000', 'Delivery fee (paid by customer)', '₹20', 'Fees & taxes (paid by customer)', '₹11', 'Customer paid', '₹1,031']) {
+    expect(t).toContain(s);
+  }
+  show({ ...L, amountExcludingDeliveryFee: 245, deliveryFee: 20, totalAmount: 265 });
+  expect(textOf()).not.toContain('Fees & taxes');
+});
+
+test('a long order ID is not cut off in the title', () => {
+  show({ ...L, orderId: '9066325384336548' });
+  const title = r.root.find(n => n.props?.accessibilityRole === 'header' && typeof n.props.numberOfLines === 'number');
+  expect(title.props.numberOfLines).toBe(2);
+});
+
 test('a delivered order shows the estimated payout', () => {
   show(L);
   const t = textOf();
@@ -72,6 +88,18 @@ test('a coupon order shows the coupon the shop paid and what the commission was 
   for (const s of ['Item total', '₹168', 'Coupon (paid by shop)', '-₹68', 'Gross revenue', '₹100', 'Commission (10% of ₹168)', '-₹17', '₹83']) {
     expect(t).toContain(s);
   }
+  // The bill says the same as the earnings: items ₹168 before the coupon, never ₹100 as "Items total".
+  expect(t).toContain('Items total | ₹168 | Coupon (paid by shop) | -₹68');
+  expect(t).not.toContain('Items total | ₹100');
+});
+
+test('an estimated order uses the shop rate it was opened with, so it matches its Earnings card', () => {
+  act(() => {
+    r = ReactTestRenderer.create(<OrderDetailsScreen order={L as Order} commissionPct={5} onBack={onBack} />);
+  });
+  const t = textOf();
+  expect(t).toContain('Commission (5%, estimated)');
+  expect(t).toContain('Estimated at 5%');
 });
 
 test('a commission sent without a rate shows no made-up percent', () => {

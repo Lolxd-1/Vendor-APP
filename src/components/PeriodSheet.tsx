@@ -25,8 +25,8 @@ const Radio = ({ label, on, onPress }: { label: string; on: boolean; onPress: ()
 // The inclusive last day of a custom period, as a calendar day.
 const lastDayOf = (p: Period) => startOfDay(addDays(p.range.end, -1));
 
-// Two pages in one sheet: the presets, and the calendar on its own page so it always fits on the screen
-// (under the presets it was pushed below the bottom edge of the sheet).
+// Two pages in one sheet: the presets, and the calendar on its own page (under the presets it was pushed below
+// the bottom edge of the sheet). Android back steps back from the calendar; tapping outside closes the sheet.
 export const PeriodSheet = ({
   visible,
   value,
@@ -68,11 +68,13 @@ export const PeriodSheet = ({
   return (
     <Sheet
       visible={visible}
-      onClose={onCalendar ? () => setPage('presets') : onClose}
+      onClose={onClose}
+      onBack={onCalendar ? () => setPage('presets') : undefined}
       title={onCalendar ? 'Custom dates' : 'Show orders from'}>
-      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        {onCalendar ? (
-          <View style={styles.custom}>
+      {onCalendar ? (
+        <>
+          {/* Only the calendar scrolls; the hint and Apply stay on screen even in a 6-week month on a small phone. */}
+          <ScrollView showsVerticalScrollIndicator={false} style={styles.scroll}>
             <Pressable
               onPress={() => setPage('presets')}
               accessibilityRole="button"
@@ -93,6 +95,8 @@ export const PeriodSheet = ({
                 setLast(l);
               }}
             />
+          </ScrollView>
+          <View style={styles.footer}>
             <Txt variant="footnote" color={colors.ink2} style={styles.hint}>
               {hint}
             </Txt>
@@ -103,7 +107,9 @@ export const PeriodSheet = ({
               onPress={() => first && choose(customPeriod(first, last ?? first))}
             />
           </View>
-        ) : (
+        </>
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.rows} accessibilityRole="radiogroup">
             {PRESETS.map(p => (
               <Radio
@@ -132,8 +138,8 @@ export const PeriodSheet = ({
               <Icon name="chevron-right" size={20} color={custom ? colors.blue : colors.ink3} />
             </Pressable>
           </View>
-        )}
-      </ScrollView>
+        </ScrollView>
+      )}
     </Sheet>
   );
 };
@@ -154,7 +160,8 @@ const styles = StyleSheet.create({
   },
   rowOn: { borderColor: colors.blue, backgroundColor: colors.blueSoft },
   rowLabel: { flex: 1 },
-  custom: { gap: space.m },
+  scroll: { flexShrink: 1 },
+  footer: { gap: space.m, paddingTop: space.s },
   back: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', minHeight: 44 },
   hint: { textAlign: 'center' },
 });

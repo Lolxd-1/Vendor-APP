@@ -102,6 +102,9 @@ test('only one period is ever checked', async () => {
       .map(n => n.props.accessibilityLabel);
   await show();
   expect(checked()).toEqual(['Today']);
+  await press('Custom dates'); // browsing the calendar and coming back does not tick a second option
+  await press('Back to periods');
+  expect(checked()).toEqual(['Today']);
   await show({ key: 'CUSTOM', label: '6 Oct – 9 Oct', range: { start: new Date(2026, 9, 6), end: new Date(2026, 9, 10) } });
   expect(checked()).toEqual(['Custom dates']);
   expect(textOf()).toContain('6 Oct – 9 Oct');
@@ -113,10 +116,12 @@ test('every calendar row has exactly 7 columns, so days sit under their weekday'
   const rows = r.root.findAll(
     n => (n.type as unknown) === 'View' && [n.props.style].flat().some((s: { flexDirection?: string } | undefined) => s?.flexDirection === 'row') && n.children.length === 7,
   );
-  expect(rows.length).toBeGreaterThanOrEqual(6); // weekday letters + 5 weeks of October 2026
-  // 1 October 2026 is a Thursday: three blanks before it in the first week.
-  const firstWeek = rows[1];
-  expect(firstWeek.findAll(n => n.props?.accessibilityLabel === '1 October 2026' && typeof n.props.onPress === 'function')).toHaveLength(1);
+  expect(rows).toHaveLength(6); // weekday letters + the 5 weeks of October 2026
+  // 1 October 2026 is a Thursday: column 4 of the first week, after three blanks.
+  const column = rows[1].children.findIndex(
+    c => typeof c !== 'string' && c.findAll(n => n.props?.accessibilityLabel === '1 October 2026').length > 0,
+  );
+  expect(column).toBe(3);
 });
 
 test('the search field clears itself', async () => {

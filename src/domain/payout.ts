@@ -48,9 +48,11 @@ export const shopCommissionPct = (orders: readonly Order[]): number | undefined 
 export const payoutOf = (o: Order, fallbackPct: number = DEFAULT_COMMISSION_PCT): Payout | null => {
   if (String(o.state).trim().toUpperCase() !== 'COMPLETED') return null;
   const f = o.finance ?? undefined;
-  const itemTotal = isNumber(f?.itemTotalAmount) ? f.itemTotalAmount : o.amountExcludingDeliveryFee;
+  const sentTotal = isNumber(f?.itemTotalAmount);
+  const itemTotal = sentTotal ? f!.itemTotalAmount : o.amountExcludingDeliveryFee;
   if (!isNumber(itemTotal) || itemTotal < 0) return null;
-  const coupon = isNumber(f?.couponDiscount) ? Math.min(Math.max(f.couponDiscount, 0), itemTotal) : 0;
+  // amountExcludingDeliveryFee is already after the coupon, so the coupon only applies to the sent item total.
+  const coupon = sentTotal && isNumber(f?.couponDiscount) ? Math.min(Math.max(f.couponDiscount, 0), itemTotal) : 0;
   const sentPct = isPct(f?.commissionRate) ? f.commissionRate : undefined;
   const sent = f?.commission;
   const hasSent = isNumber(sent) && sent >= 0 && sent <= itemTotal;

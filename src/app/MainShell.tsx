@@ -43,7 +43,7 @@ export const MainShell = ({ session }: { session: Session }) => {
   const [nav, setNav] = useState<Nav>({ tab: 'orders', stack: [] });
   const [segment, setSegment] = useState<OrderPhase>('PENDING');
   const [visited, setVisited] = useState<TabKey[]>(['orders']);
-  const [openOrder, setOpenOrder] = useState<Order | null>(null);
+  const [openOrder, setOpenOrder] = useState<{ order: Order; pct?: number } | null>(null);
   const store = useStoreStatus(session.shopId);
   const profile = useShopProfile(session.shopId, board);
 
@@ -97,8 +97,8 @@ export const MainShell = ({ session }: { session: Session }) => {
   const openPage = useCallback((page: PageKey) => setNav(n => ({ ...n, stack: [...n.stack, page] })), []);
   const closePage = useCallback(() => setNav(n => ({ ...n, stack: n.stack.slice(0, -1) })), []);
   const showOrder = useCallback(
-    (o: Order) => {
-      setOpenOrder(o);
+    (order: Order, pct?: number) => {
+      setOpenOrder({ order, pct });
       openPage('order');
     },
     [openPage],
@@ -147,7 +147,7 @@ export const MainShell = ({ session }: { session: Session }) => {
       )}
       {page === 'order' && openOrder && (
         <View style={styles.fill}>
-          <OrderDetailsScreen order={openOrder} onBack={closePage} />
+          <OrderDetailsScreen order={openOrder.order} commissionPct={openOrder.pct} onBack={closePage} />
         </View>
       )}
       {!page && <TabBar tab={nav.tab} pending={pendingCount} onChange={selectTab} />}

@@ -31,6 +31,11 @@ describe('payout', () => {
     expect(commissionLabel(p!)).toBe('Commission (10% of ₹168)');
   });
 
+  it('a coupon is not taken off twice when the backend sent no item total (the amount is already after it)', () => {
+    const p = payoutOf(completed({ amountExcludingDeliveryFee: 100, finance: { couponDiscount: 68, commissionRate: 10, commission: 17 } }));
+    expect(p).toMatchObject({ itemTotal: 100, coupon: 0, gross: 100, net: 83 });
+  });
+
   it('GST on commission is deducted when the backend sends it', () => {
     const p = payoutOf(live(1000, 50, { commissionGst: 9 }));
     expect(p).toMatchObject({ commissionGst: 9, net: 941 });
@@ -57,7 +62,7 @@ describe('payout', () => {
       expect(payoutOf(completed({ finance: { commission } }))).toMatchObject({ estimated: true, commission: 20 });
     }
     expect(payoutOf(completed({ finance: { commissionRate: 250 } }))).toMatchObject({ pct: 10 });
-    expect(payoutOf(completed({ finance: { couponDiscount: 999 } }))).toMatchObject({ coupon: 200, gross: 0 });
+    expect(payoutOf(completed({ finance: { itemTotalAmount: 200, couponDiscount: 999 } }))).toMatchObject({ coupon: 200, gross: 0 });
   });
 
   it('only delivered orders have a payout', () => {

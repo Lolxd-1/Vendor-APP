@@ -95,19 +95,23 @@ describe('history, stats and store timings (same contract as the web dashboard)'
     expect(fetchMock.mock.calls[0][0]).toBe('http://prd.quickverse.in/v1/vendor-schedules/shop/7');
   });
 
-  it('online/offline switch is a PATCH with the flag in the query', async () => {
-    reply(200, 'ok');
-    await setManualOffline('7', true);
-    expect(fetchMock.mock.calls[0][0]).toBe('http://prd.quickverse.in/v1/vendor-schedules/shop/7/manual-offline?manualOfflineOverride=true');
-    expect(fetchMock.mock.calls[0][1].method).toBe('PATCH');
-  });
-
-  // The exact reply the live backend gives for a shop that never saved timings (shop 68246, 2026-10-16).
+  // Replies the live backend gave on 2026-10-16 for a shop that never saved timings (test shop 68246):
+  // the read is a 404 with this body, and the manual-offline PATCH is an HTTP 500.
   const NO_RECORD = { error: { code: '404-1', message: 'No configuration layout schema values found linked with shopId: 7' } };
+  const RECORD = { manualOfflineOverride: false, operatingHoursJson: '{"Mon":{"openTime":"10:00","closeTime":"11:00"}}' };
+  const methods = () => fetchMock.mock.calls.map(c => c[1].method);
 
   it('a shop with no schedule record reads as open with no closures, not as an error', async () => {
     reply(404, NO_RECORD);
     await expect(getSchedule('7')).resolves.toEqual({ manualOffline: false, week: {} });
+  });
+
+  it('only the backend\'s exact no-record reply counts: any other 404 stays an error (timings never read as empty)', async () => {
+    reply(404, { status: 404, error: 'Not Found' }); // e.g. a moved route
+    await expect(getSchedule('7')).rejects.toThrow('Server error (404)');
+    reply(404, { status: 404, error: 'Not Found' });
+    await expect(setManualOffline('7', true)).rejects.toThrow('Server error (404)');
+    expect(methods()).toEqual(['GET', 'GET']); // nothing was written
   });
 
   it('other schedule failures stay errors', async () => {
@@ -115,35 +119,41 @@ describe('history, stats and store timings (same contract as the web dashboard)'
     await expect(getSchedule('7')).rejects.toThrow('down');
   });
 
-  it('going offline with no record yet creates it with the switch off and no timetable', async () => {
-    reply(404, NO_RECORD); // PATCH
-    reply(404, NO_RECORD); // GET confirms there is no record
-    reply(200, {}); // POST configure
+  it('with a record, the switch is a PATCH with the flag in the query', async () => {
+    reply(200, RECORD);
+    reply(200, 'Vendor manual offline status updated successfully.');
     await setManualOffline('7', true);
-    expect(fetchMock.mock.calls.map(c => c[1].method)).toEqual(['PATCH', 'GET', 'POST']);
-    const [url, init] = fetchMock.mock.calls[2];
-    expect(url).toBe('http://prd.quickverse.in/v1/vendor-schedules/configure');
-    expect(JSON.parse(init.body)).toEqual({ shopId: '7', manualOfflineOverride: true, scheduleActive: false, operatingHours: '{}' });
+    expect(methods()).toEqual(['GET', 'PATCH']);
+    expect(fetchMock.mock.calls[1][0]).toBe('http://prd.quickverse.in/v1/vendor-schedules/shop/7/manual-offline?manualOfflineOverride=true');
   });
 
-  it('going online with no record does nothing more (it is online already)', async () => {
+  it('with no record yet, going offline creates it with the switch on and no timetable (no PATCH, which would 500)', async () => {
     reply(404, NO_RECORD);
+    reply(200, {});
+    await setManualOffline('7', true);
+    expect(methods()).toEqual(['GET', 'POST']);
+    const [url, init] = fetchMock.mock.calls[1];
+    expect(url).toBe('http://prd.quickverse.in/v1/vendor-schedules/configure');
+    expect(JSON.parse(init.body)).toEqual({ shopId: '7', manualOfflineOverride: true, scheduleActive: true, operatingHours: '{}' });
+  });
+
+  it('with no record, going online sends nothing (it is online already)', async () => {
     reply(404, NO_RECORD);
     await expect(setManualOffline('7', false)).resolves.toBeUndefined();
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(methods()).toEqual(['GET']);
   });
 
-  it('never overwrites existing timings: a 404 on the switch with a record present is an error', async () => {
-    reply(404, { error: { message: 'Not Found' } }); // PATCH
-    reply(200, { manualOfflineOverride: false, operatingHoursJson: '{"Mon":{"openTime":"10:00","closeTime":"11:00"}}' });
-    await expect(setManualOffline('7', true)).rejects.toThrow('Could not change store status');
-    expect(fetchMock.mock.calls.map(c => c[1].method)).toEqual(['PATCH', 'GET']);
+  it('never replaces existing timings: with a record, a failing switch is an error and nothing else is sent', async () => {
+    reply(200, RECORD);
+    reply(500, '');
+    await expect(setManualOffline('7', true)).rejects.toThrow('Server error (500)');
+    expect(methods()).toEqual(['GET', 'PATCH']);
   });
 
-  it('a failed switch that is not a 404 is reported and nothing else is sent', async () => {
+  it('if the record cannot be read, nothing is written', async () => {
     reply(502, { error: { message: 'Bad gateway' } });
     await expect(setManualOffline('7', true)).rejects.toThrow('Bad gateway');
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(methods()).toEqual(['GET']);
   });
 
   it('saving timings keeps the current manual-offline value', async () => {

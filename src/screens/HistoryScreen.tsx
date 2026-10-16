@@ -6,6 +6,7 @@ import { clockTime, historyStatusInfo, itemsSummary, money } from '../domain/for
 import { mergeOrders } from '../domain/history';
 import type { HistoryStatus, Order } from '../domain/order';
 import { addDays, dayLabel, presetPeriod, queryOf, startOfDay, type Period } from '../domain/period';
+import { shopCommissionPct } from '../domain/payout';
 import { parseServerTime } from '../domain/time';
 import { errorText } from '../hooks/useRemote';
 import { StatusPill } from '../ui/Badge';
@@ -75,7 +76,13 @@ const sectionSummary = (data: Order[]): string => {
   return delivered > 0 ? `${count} · ${money(delivered)} delivered` : count;
 };
 
-export const HistoryScreen = ({ shopId, onOpenOrder }: { shopId: string; onOpenOrder: (o: Order) => void }) => {
+export const HistoryScreen = ({
+  shopId,
+  onOpenOrder,
+}: {
+  shopId: string;
+  onOpenOrder: (o: Order, commissionPct?: number) => void;
+}) => {
   const [period, setPeriod] = useState<Period>(() => presetPeriod('TODAY', new Date()));
   const [status, setStatus] = useState(STATUSES[0]);
   const [query, setQuery] = useState('');
@@ -122,6 +129,7 @@ export const HistoryScreen = ({ shopId, onOpenOrder }: { shopId: string; onOpenO
   };
 
   const needle = query.trim().toLowerCase();
+  const shopPct = useMemo(() => shopCommissionPct(list.orders), [list.orders]);
   const sections = useMemo(() => {
     const shown = needle
       ? list.orders.filter(
@@ -197,7 +205,7 @@ export const HistoryScreen = ({ shopId, onOpenOrder }: { shopId: string; onOpenO
             </Txt>
           </View>
         )}
-        renderItem={({ item }) => <HistoryRow order={item} onPress={() => onOpenOrder(item)} />}
+        renderItem={({ item }) => <HistoryRow order={item} onPress={() => onOpenOrder(item, shopPct)} />}
         ItemSeparatorComponent={Gap}
         onEndReached={loadMore}
         onEndReachedThreshold={0.4}

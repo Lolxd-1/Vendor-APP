@@ -6,15 +6,19 @@ import { Txt } from './Txt';
 
 const DURATION = 220;
 
-// Bottom sheet: slides up over a dimmed screen; tapping the dim area or Android back closes it.
+// Bottom sheet: slides up over a dimmed screen; tapping the dim area closes it, and so does Android back unless
+// onBack is given.
 export const Sheet = ({
   visible,
   onClose,
+  onBack,
   title,
   children,
 }: {
   visible: boolean;
   onClose: () => void;
+  /** Android back, when it should step back inside the sheet instead of closing it. */
+  onBack?: () => void;
   title?: string;
   children: ReactNode;
 }) => {
@@ -37,7 +41,7 @@ export const Sheet = ({
   const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [height * 0.6, 0] });
 
   return (
-    <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={onClose}>
+    <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={onBack ?? onClose}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.scrim, { opacity: progress }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
       </Animated.View>

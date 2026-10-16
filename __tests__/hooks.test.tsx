@@ -108,6 +108,36 @@ describe('useStoreStatus', () => {
     h.unmount();
   });
 
+  it('a failed switch re-reads the record, in case the server applied it before the reply was lost', async () => {
+    api.getSchedule.mockResolvedValue({ manualOffline: false, week: {} });
+    api.setManualOffline.mockRejectedValue(new ApiError('Server took too long to answer', null));
+    const h = await renderHook(({ id }) => useStoreStatus(id), { id: '7' });
+    const readsBefore = api.getSchedule.mock.calls.length;
+    await act(async () => {
+      await h.result.current.setOnline(false);
+    });
+    expect(api.getSchedule.mock.calls.length).toBeGreaterThan(readsBefore);
+    h.unmount();
+  });
+
+  it('never undoes timings changed on another device: the save stops and asks to check again', async () => {
+    const loaded = { Mon: { openTime: '10:00', closeTime: '11:00' } };
+    const changedOnPc = { ...loaded, Tue: { openTime: '15:00', closeTime: '16:00' } };
+    api.getSchedule.mockResolvedValueOnce({ manualOffline: false, week: loaded });
+    api.getSchedule.mockResolvedValue({ manualOffline: false, week: changedOnPc });
+    api.saveSchedule.mockResolvedValue();
+    const h = await renderHook(({ id }) => useStoreStatus(id), { id: '7' });
+    let ok: boolean | undefined;
+    await act(async () => {
+      ok = await h.result.current.save({ ...loaded, Wed: { openTime: '00:00', closeTime: '00:00' } });
+    });
+    expect(ok).toBe(false);
+    expect(api.saveSchedule).not.toHaveBeenCalled();
+    expect(h.result.current.error).toBe('Timings were changed on another device. Check them and save again.');
+    expect(h.result.current.schedule?.week).toEqual(changedOnPc); // the screen now shows the PC's timings
+    h.unmount();
+  });
+
   it('saving timings uses the offline switch as it is now, not as it was when the screen opened', async () => {
     api.getSchedule.mockResolvedValueOnce({ manualOffline: false, week: {} }); // screen opens: online
     api.getSchedule.mockResolvedValue({ manualOffline: true, week: {} }); // meanwhile the PC closed the store

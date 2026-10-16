@@ -110,9 +110,11 @@ export const getAllOrders = async (
 
 const schedulePath = (shopId: string) => `/v1/vendor-schedules/shop/${encodeURIComponent(shopId)}`;
 
-// A shop that never saved store timings has no record yet; the backend answers 404
-// ("No configuration ... found linked with shopId") and the manual-offline PATCH fails the same way.
-const isNoRecord = (e: unknown) => e instanceof ApiError && e.status === 404;
+// A shop that never saved store timings has no record yet: the read answers 404 with the backend's code '404-1'
+// ("No configuration ... found linked with shopId") and the manual-offline PATCH fails with a 500.
+// Only that exact reply counts: any other 404 (moved route, proxy page) stays an error, so timings are never
+// taken as empty and overwritten.
+const isNoRecord = (e: unknown) => e instanceof ApiError && e.status === 404 && e.code === '404-1';
 
 const readSchedule = (shopId: string) => request<unknown>('GET', schedulePath(shopId));
 
@@ -125,25 +127,25 @@ export const getSchedule = async (shopId: string): Promise<StoreSchedule> => {
   }
 };
 
+// Read first, then switch: the PATCH only works on an existing record. With no record, going offline creates
+// one holding just the switch (no timetable); a record that exists is never replaced, so timings are kept.
 export const setManualOffline = async (shopId: string, offline: boolean): Promise<void> => {
-  try {
-    await request<unknown>('PATCH', `${schedulePath(shopId)}/manual-offline`, { query: { manualOfflineOverride: offline } });
-    return;
-  } catch (e) {
-    if (!isNoRecord(e)) throw e;
-  }
-  // Create the record only when the read confirms there is none, so existing timings are never overwritten.
+  let exists = true;
   try {
     await readSchedule(shopId);
   } catch (e) {
     if (!isNoRecord(e)) throw e;
-    if (!offline) return; // no record means online already
-    await request<unknown>('POST', '/v1/vendor-schedules/configure', {
-      body: { shopId, manualOfflineOverride: true, scheduleActive: false, operatingHours: '{}' },
-    });
+    exists = false;
+  }
+  if (exists) {
+    await request<unknown>('PATCH', `${schedulePath(shopId)}/manual-offline`, { query: { manualOfflineOverride: offline } });
     return;
   }
-  throw new ApiError('Could not change store status. Try again.', 404);
+  if (!offline) return; // no record means online already
+  await request<unknown>('POST', '/v1/vendor-schedules/configure', {
+    // scheduleActive true + '{}' is what the web writes for "no closures" (its delete-last-day); never send false.
+    body: { shopId, manualOfflineOverride: true, scheduleActive: true, operatingHours: '{}' },
+  });
 };
 
 // The web always sends manualOfflineOverride:false here, which would silently re-open a store the vendor closed;

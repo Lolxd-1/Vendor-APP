@@ -1,7 +1,7 @@
 import { BASE_URL, BASIC_AUTH, REQUEST_ORIGIN, REQUEST_TIMEOUT_MS } from '../config';
 
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number | null) {
+  constructor(message: string, readonly status: number | null, readonly code: string | null = null) {
     super(message);
     this.name = 'ApiError';
   }
@@ -26,6 +26,12 @@ const buildUrl = (path: string, query?: Query): string => {
 };
 
 // The backend reports errors as { error: { message } } (the web reads error.data.error.message).
+// The backend's own error code, e.g. '404-1' for "no schedule record for this shop".
+const errorCodeOf = (payload: unknown): string | null => {
+  const code = (payload as { error?: { code?: unknown } } | null)?.error?.code;
+  return typeof code === 'string' ? code : null;
+};
+
 const errorMessageOf = (payload: unknown, fallback: string): string => {
   const message = (payload as { error?: { message?: unknown } } | null)?.error?.message;
   return typeof message === 'string' && message.trim() ? message : fallback;
@@ -59,7 +65,7 @@ export const request = async <T>(method: 'GET' | 'POST' | 'PATCH', path: string,
       signal: controller.signal,
     });
     const payload = parseBody(await res.text());
-    if (!res.ok) throw new ApiError(errorMessageOf(payload, `Server error (${res.status})`), res.status);
+    if (!res.ok) throw new ApiError(errorMessageOf(payload, `Server error (${res.status})`), res.status, errorCodeOf(payload));
     return payload as T;
   } catch (e) {
     if (e instanceof ApiError) throw e;

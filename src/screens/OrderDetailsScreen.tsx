@@ -77,18 +77,45 @@ const StepRow = ({ step, last }: { step: Step; last: boolean }) => {
   );
 };
 
-export const OrderDetailsScreen = ({ order, onBack }: { order: Order; onBack: () => void }) => {
+const num = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
+
+// The bill as the customer saw it, matching 'Your earnings': the item total before the coupon (when the backend
+// sends it), the coupon, and whatever else the customer paid on top (platform fee, GST, charges), so the lines add
+// up to 'Customer paid'.
+const billOf = (o: Order) => {
+  const sentTotal = num(o.finance?.itemTotalAmount);
+  const itemsTotal = sentTotal ?? num(o.amountExcludingDeliveryFee);
+  const coupon = sentTotal !== undefined ? Math.max(num(o.finance?.couponDiscount) ?? 0, 0) : 0;
+  const paid = num(o.totalAmount);
+  const feesAndTaxes =
+    paid !== undefined && itemsTotal !== undefined
+      ? Math.round((paid - (itemsTotal - coupon) - (num(o.deliveryFee) ?? 0)) * 100) / 100
+      : 0;
+  return { itemsTotal, coupon, feesAndTaxes };
+};
+
+export const OrderDetailsScreen = ({
+  order,
+  commissionPct,
+  onBack,
+}: {
+  order: Order;
+  /** The shop's rate seen on its other orders, for estimating an order the backend sent no commission for. */
+  commissionPct?: number;
+  onBack: () => void;
+}) => {
   const status = historyStatusInfo(order.state);
-  const payout = payoutOf(order);
+  const payout = payoutOf(order, commissionPct);
   const steps = timelineOf(order);
   const items = Array.isArray(order.orderItem) ? order.orderItem : [];
   const rider = order.deliveryPartnerDetails;
   const note = typeof order.orderDescription === 'string' ? order.orderDescription.trim() : '';
   const state = String(order.state).trim().toUpperCase();
+  const bill = billOf(order);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <LargeHeader title={`Order #${order.orderId}`} onBack={onBack} />
+      <LargeHeader title={`Order #${order.orderId}`} titleLines={2} onBack={onBack} />
 
       <View style={styles.status}>
         <View style={styles.pills}>
@@ -131,10 +158,12 @@ export const OrderDetailsScreen = ({ order, onBack }: { order: Order; onBack: ()
             value={typeof it.itemPrice === 'number' && typeof it.itemCount === 'number' ? money(it.itemPrice * it.itemCount) : ''}
           />
         ))}
-        <Line label="Items total" value={money(order.amountExcludingDeliveryFee)} strong />
+        <Line label="Items total" value={money(bill.itemsTotal)} strong />
+        {bill.coupon > 0 && <Line label="Coupon (paid by shop)" value={money(-bill.coupon)} />}
         {typeof order.deliveryFee === 'number' && (
           <Line label="Delivery fee (paid by customer)" value={money(order.deliveryFee)} />
         )}
+        {bill.feesAndTaxes > 0 && <Line label="Fees & taxes (paid by customer)" value={money(bill.feesAndTaxes)} />}
         {typeof order.totalAmount === 'number' && <Line label="Customer paid" value={money(order.totalAmount)} />}
       </Section>
 

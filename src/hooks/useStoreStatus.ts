@@ -3,6 +3,8 @@ import { getSchedule, saveSchedule, setManualOffline } from '../api/endpoints';
 import { storeStatus, type StoreSchedule, type Week } from '../domain/schedule';
 import { useRemote } from './useRemote';
 
+class TimingsChanged extends Error {}
+
 /**
  * Online/Offline and store timings for one shop. After a change the server copy is re-read; until it arrives the
  * change is shown locally so the switch doesn't flick back.
@@ -35,8 +37,10 @@ export const useStoreStatus = (shopId: string) => {
         setLocal(next);
         reload();
         return true;
-      } catch {
-        setActionError(failure);
+      } catch (e) {
+        setActionError(e instanceof TimingsChanged ? e.message : failure);
+        // The server may have applied it before the reply was lost: show what it holds now.
+        reload();
         return false;
       } finally {
         setBusy(false);
@@ -51,16 +55,24 @@ export const useStoreStatus = (shopId: string) => {
     [change, shopId],
   );
 
-  // The offline switch is re-read just before saving: the PC may have closed the store since this screen loaded,
-  // and the save sends the whole record.
+  // The save replaces the whole record, so the record is re-read first: the offline switch is sent as it is now
+  // (the PC may have closed the store), and if the PC changed the timings since they were loaded here, nothing is
+  // sent — the vendor sees the new timings and saves again, instead of silently undoing the PC's change.
+  const loadedWeek = JSON.stringify(schedule?.week ?? {});
   const save = useCallback(
     (week: Week) =>
       change(
-        async () => saveSchedule(shopId, week, (await getSchedule(shopId)).manualOffline),
+        async () => {
+          const fresh = await getSchedule(shopId);
+          if (JSON.stringify(fresh.week) !== loadedWeek) {
+            throw new TimingsChanged('Timings were changed on another device. Check them and save again.');
+          }
+          await saveSchedule(shopId, week, fresh.manualOffline);
+        },
         { week },
         'Could not save store timings. Try again.',
       ),
-    [change, shopId],
+    [change, shopId, loadedWeek],
   );
 
   return { schedule, status, busy, error: actionError ?? remote.error, loading: remote.loading, setOnline, save, reload };

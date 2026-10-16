@@ -10,11 +10,13 @@ export const LargeHeader = ({
   subtitle,
   right,
   onBack,
+  titleLines = 1,
 }: {
   title: string;
   subtitle?: ReactNode;
   right?: ReactNode;
   onBack?: () => void;
+  titleLines?: number;
 }) => (
   <View style={styles.wrap}>
     {onBack && (
@@ -27,7 +29,7 @@ export const LargeHeader = ({
     )}
     <View style={styles.row}>
       <View style={styles.titles}>
-        <Txt variant="largeTitle" accessibilityRole="header" numberOfLines={1}>
+        <Txt variant="largeTitle" accessibilityRole="header" numberOfLines={titleLines}>
           {title}
         </Txt>
         {typeof subtitle === 'string' ? (
