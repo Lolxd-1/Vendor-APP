@@ -21,6 +21,7 @@ const MONTH_NAMES = [
 ];
 const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 // Day numbers must stay inside their 36 dp circle even with a large phone font.
+// The circle view is never flattened away (collapsable false), so it keeps its round shape once selected.
 const MAX_FONT_SCALE = 1.3;
 
 const sameDay = (a: Date | null, b: Date) => !!a && a.getTime() === b.getTime();
@@ -84,7 +85,7 @@ export const CalendarRange = ({
           if (!disabled) pick(day);
         }}
         style={[styles.cell, between && styles.band]}>
-        <View style={[styles.circle, isEnd && styles.circleOn]}>
+        <View collapsable={false} style={[styles.circle, isEnd && styles.circleOn]}>
           <Txt variant="callout" color={fg} tabular maxFontSizeMultiplier={MAX_FONT_SCALE}>
             {String(day.getDate())}
           </Txt>
@@ -141,5 +142,6 @@ const styles = StyleSheet.create({
   weekday: { flex: 1, height: 24, alignItems: 'center', justifyContent: 'center' },
   band: { backgroundColor: colors.blueSoft },
   circle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  circleOn: { backgroundColor: colors.blue },
+  // The radius also travels with the colour: a day's circle is created when it is selected.
+  circleOn: { backgroundColor: colors.blue, borderRadius: 18 },
 });
