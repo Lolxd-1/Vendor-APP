@@ -107,6 +107,19 @@ describe('useStoreStatus', () => {
     expect(api.saveSchedule).toHaveBeenCalledWith('7', week, true);
     h.unmount();
   });
+
+  it('saving timings uses the offline switch as it is now, not as it was when the screen opened', async () => {
+    api.getSchedule.mockResolvedValueOnce({ manualOffline: false, week: {} }); // screen opens: online
+    api.getSchedule.mockResolvedValue({ manualOffline: true, week: {} }); // meanwhile the PC closed the store
+    api.saveSchedule.mockResolvedValue();
+    const h = await renderHook(({ id }) => useStoreStatus(id), { id: '7' });
+    const week = { Mon: { openTime: '10:00', closeTime: '11:00' } };
+    await act(async () => {
+      await h.result.current.save(week);
+    });
+    expect(api.saveSchedule).toHaveBeenCalledWith('7', week, true);
+    h.unmount();
+  });
 });
 
 describe('useShopProfile', () => {

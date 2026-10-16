@@ -110,11 +110,40 @@ export const getAllOrders = async (
 
 const schedulePath = (shopId: string) => `/v1/vendor-schedules/shop/${encodeURIComponent(shopId)}`;
 
-export const getSchedule = async (shopId: string): Promise<StoreSchedule> =>
-  parseSchedule(await request<unknown>('GET', schedulePath(shopId)));
+// A shop that never saved store timings has no record yet; the backend answers 404
+// ("No configuration ... found linked with shopId") and the manual-offline PATCH fails the same way.
+const isNoRecord = (e: unknown) => e instanceof ApiError && e.status === 404;
+
+const readSchedule = (shopId: string) => request<unknown>('GET', schedulePath(shopId));
+
+export const getSchedule = async (shopId: string): Promise<StoreSchedule> => {
+  try {
+    return parseSchedule(await readSchedule(shopId));
+  } catch (e) {
+    if (isNoRecord(e)) return parseSchedule(null); // no record: open, no closures
+    throw e;
+  }
+};
 
 export const setManualOffline = async (shopId: string, offline: boolean): Promise<void> => {
-  await request<unknown>('PATCH', `${schedulePath(shopId)}/manual-offline`, { query: { manualOfflineOverride: offline } });
+  try {
+    await request<unknown>('PATCH', `${schedulePath(shopId)}/manual-offline`, { query: { manualOfflineOverride: offline } });
+    return;
+  } catch (e) {
+    if (!isNoRecord(e)) throw e;
+  }
+  // Create the record only when the read confirms there is none, so existing timings are never overwritten.
+  try {
+    await readSchedule(shopId);
+  } catch (e) {
+    if (!isNoRecord(e)) throw e;
+    if (!offline) return; // no record means online already
+    await request<unknown>('POST', '/v1/vendor-schedules/configure', {
+      body: { shopId, manualOfflineOverride: true, scheduleActive: false, operatingHours: '{}' },
+    });
+    return;
+  }
+  throw new ApiError('Could not change store status. Try again.', 404);
 };
 
 // The web always sends manualOfflineOverride:false here, which would silently re-open a store the vendor closed;

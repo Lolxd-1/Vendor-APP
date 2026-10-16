@@ -2,7 +2,7 @@ import React, { type ReactNode } from 'react';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { clockTime, dayTime, historyStatusInfo, money, paymentLabel } from '../domain/format';
 import type { Order } from '../domain/order';
-import { DEFAULT_COMMISSION_PCT, payoutOf } from '../domain/payout';
+import { commissionLabel, payoutOf } from '../domain/payout';
 import { timelineOf, type Step } from '../domain/timeline';
 import { StatusPill } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -141,18 +141,22 @@ export const OrderDetailsScreen = ({ order, onBack }: { order: Order; onBack: ()
       <Section title="Your earnings">
         {payout ? (
           <>
+            {payout.coupon > 0 && (
+              <>
+                <Line label="Item total" value={money(payout.itemTotal)} />
+                <Line label="Coupon (paid by shop)" value={money(-payout.coupon)} />
+              </>
+            )}
             <Line label="Gross revenue" value={money(payout.gross)} />
-            <Line
-              label={`Commission (${payout.pct}%${payout.estimated ? ', estimated' : ''})`}
-              value={money(-payout.commission)}
-            />
+            <Line label={commissionLabel(payout)} labelLines={2} value={money(-payout.commission)} />
+            {payout.commissionGst > 0 && <Line label="GST on commission" value={money(-payout.commissionGst)} />}
             <Line label="Net receivable" value={money(payout.net)} strong color={colors.green} />
             <Txt variant="footnote" color={colors.ink2}>
-              Commission is the only deduction.
+              Payment gateway and COD charges are paid by QuickVerse.
             </Txt>
             {payout.estimated && (
               <Txt variant="footnote" color={colors.ink2}>
-                {`Estimated at ${DEFAULT_COMMISSION_PCT}% because QuickVerse did not send the commission for this order.`}
+                {`Estimated at ${payout.pct}% because QuickVerse did not send the commission for this order.`}
               </Txt>
             )}
           </>

@@ -84,6 +84,41 @@ test('month arrows move the calendar and stop at this month', async () => {
   expect(textOf()).toContain('September 2026');
 });
 
+test('custom dates open on their own page, not below the presets, and Back returns', async () => {
+  await show();
+  await press('Custom dates');
+  expect(textOf()).toContain('October 2026');
+  expect(r.root.findAll(n => n.props?.accessibilityLabel === 'Yesterday')).toHaveLength(0);
+  await press('Back to periods');
+  expect(r.root.findAll(n => typeof n.props?.onPress === 'function' && n.props.accessibilityLabel === 'Yesterday')).not.toHaveLength(0);
+  expect(textOf()).not.toContain('October 2026');
+});
+
+test('only one period is ever checked', async () => {
+  const checked = () =>
+    r.root
+      .findAll(n => n.props?.accessibilityRole === 'radio' && typeof n.props?.onPress === 'function')
+      .filter(n => n.props.accessibilityState?.checked)
+      .map(n => n.props.accessibilityLabel);
+  await show();
+  expect(checked()).toEqual(['Today']);
+  await show({ key: 'CUSTOM', label: '6 Oct – 9 Oct', range: { start: new Date(2026, 9, 6), end: new Date(2026, 9, 10) } });
+  expect(checked()).toEqual(['Custom dates']);
+  expect(textOf()).toContain('6 Oct – 9 Oct');
+});
+
+test('every calendar row has exactly 7 columns, so days sit under their weekday', async () => {
+  await show();
+  await press('Custom dates');
+  const rows = r.root.findAll(
+    n => (n.type as unknown) === 'View' && [n.props.style].flat().some((s: { flexDirection?: string } | undefined) => s?.flexDirection === 'row') && n.children.length === 7,
+  );
+  expect(rows.length).toBeGreaterThanOrEqual(6); // weekday letters + 5 weeks of October 2026
+  // 1 October 2026 is a Thursday: three blanks before it in the first week.
+  const firstWeek = rows[1];
+  expect(firstWeek.findAll(n => n.props?.accessibilityLabel === '1 October 2026' && typeof n.props.onPress === 'function')).toHaveLength(1);
+});
+
 test('the search field clears itself', async () => {
   const change = jest.fn();
   await act(async () => {

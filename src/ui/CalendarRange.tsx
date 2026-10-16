@@ -20,8 +20,16 @@ const MONTH_NAMES = [
   'December',
 ];
 const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+// Day numbers must stay inside their 36 dp circle even with a large phone font.
+const MAX_FONT_SCALE = 1.3;
 
 const sameDay = (a: Date | null, b: Date) => !!a && a.getTime() === b.getTime();
+
+// Rows of 7 so every day sits under its weekday (percentage widths can round a 7th cell onto the next row).
+const weeksOf = (cells: (Date | null)[]): (Date | null)[][] => {
+  const padded = [...cells, ...Array<null>((7 - (cells.length % 7)) % 7).fill(null)];
+  return Array.from({ length: padded.length / 7 }, (_, w) => padded.slice(w * 7, w * 7 + 7));
+};
 
 // One month at a time, Monday first; days after `today` are not pickable.
 export const CalendarRange = ({
@@ -44,7 +52,7 @@ export const CalendarRange = ({
   const daysInMonth = new Date(month.year, month.month + 1, 0).getDate();
   const blanks = (monthStart.getDay() + 6) % 7;
   const days = Array.from({ length: daysInMonth }, (_, i) => addDays(monthStart, i));
-  const cells: (Date | null)[] = [...Array<null>(blanks).fill(null), ...days];
+  const weeks = weeksOf([...Array<null>(blanks).fill(null), ...days]);
 
   const move = (delta: number) => {
     const d = new Date(month.year, month.month + delta, 1);
@@ -57,6 +65,34 @@ export const CalendarRange = ({
     else onPick(day, null);
   };
 
+  const renderDay = (day: Date | null, i: number) => {
+    if (!day) return <View key={`b${i}`} style={styles.cell} />;
+    const disabled = day.getTime() > todayStart.getTime();
+    const isEnd = sameDay(first, day) || sameDay(last, day);
+    const between =
+      first !== null && last !== null && day.getTime() > first.getTime() && day.getTime() < last.getTime();
+    const isToday = sameDay(todayStart, day);
+    const fg = isEnd ? colors.onColor : disabled ? colors.ink3 : isToday ? colors.blue : colors.ink;
+    return (
+      <Pressable
+        key={day.getTime()}
+        accessibilityRole="button"
+        accessibilityLabel={`${day.getDate()} ${MONTH_NAMES[day.getMonth()]} ${day.getFullYear()}`}
+        accessibilityState={{ selected: isEnd || between, disabled }}
+        disabled={disabled}
+        onPress={() => {
+          if (!disabled) pick(day);
+        }}
+        style={[styles.cell, between && styles.band]}>
+        <View style={[styles.circle, isEnd && styles.circleOn]}>
+          <Txt variant="callout" color={fg} tabular maxFontSizeMultiplier={MAX_FONT_SCALE}>
+            {String(day.getDate())}
+          </Txt>
+        </View>
+      </Pressable>
+    );
+  };
+
   return (
     <View>
       <View style={styles.header}>
@@ -67,7 +103,7 @@ export const CalendarRange = ({
           style={styles.arrow}>
           <Icon name="chevron-left" size={22} />
         </Pressable>
-        <Txt variant="headline">{`${MONTH_NAMES[month.month]} ${month.year}`}</Txt>
+        <Txt variant="headline" maxFontSizeMultiplier={MAX_FONT_SCALE}>{`${MONTH_NAMES[month.month]} ${month.year}`}</Txt>
         <Pressable
           accessibilityLabel="Next month"
           accessibilityState={{ disabled: atThisMonth }}
@@ -78,41 +114,20 @@ export const CalendarRange = ({
           <Icon name="chevron-right" size={22} />
         </Pressable>
       </View>
-      <View style={styles.grid}>
+      <View style={styles.week}>
         {WEEKDAY_LETTERS.map((w, i) => (
           <View key={i} style={styles.cell}>
-            <Txt variant="caption" color={colors.ink3}>
+            <Txt variant="caption" color={colors.ink3} maxFontSizeMultiplier={MAX_FONT_SCALE}>
               {w}
             </Txt>
           </View>
         ))}
-        {cells.map((day, i) => {
-          if (!day) return <View key={`b${i}`} style={styles.cell} />;
-          const disabled = day.getTime() > todayStart.getTime();
-          const isEnd = sameDay(first, day) || sameDay(last, day);
-          const between =
-            first !== null && last !== null && day.getTime() > first.getTime() && day.getTime() < last.getTime();
-          const isToday = sameDay(todayStart, day);
-          const fg = isEnd ? colors.onColor : disabled ? colors.ink3 : isToday ? colors.blue : colors.ink;
-          return (
-            <Pressable
-              key={day.getTime()}
-              accessibilityLabel={`${day.getDate()} ${MONTH_NAMES[day.getMonth()]} ${day.getFullYear()}`}
-              accessibilityState={{ selected: isEnd || between, disabled }}
-              disabled={disabled}
-              onPress={() => {
-                if (!disabled) pick(day);
-              }}
-              style={[styles.cell, between && styles.band]}>
-              <View style={[styles.circle, isEnd && styles.circleOn]}>
-                <Txt variant="callout" color={fg}>
-                  {String(day.getDate())}
-                </Txt>
-              </View>
-            </Pressable>
-          );
-        })}
       </View>
+      {weeks.map((week, w) => (
+        <View key={w} style={styles.week}>
+          {week.map((day, i) => renderDay(day, w * 7 + i))}
+        </View>
+      ))}
     </View>
   );
 };
@@ -121,9 +136,9 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space.s },
   arrow: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   off: { opacity: 0.35 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  cell: { width: `${100 / 7}%`, height: 44, alignItems: 'center', justifyContent: 'center' },
+  week: { flexDirection: 'row' },
+  cell: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   band: { backgroundColor: colors.blueSoft },
-  circle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  circle: { minWidth: 36, minHeight: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   circleOn: { backgroundColor: colors.blue },
 });

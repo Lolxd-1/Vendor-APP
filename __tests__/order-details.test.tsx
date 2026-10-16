@@ -50,16 +50,35 @@ test('shows the bill', () => {
 test('a delivered order shows the estimated payout', () => {
   show(L);
   const t = textOf();
-  for (const s of ['Gross revenue', 'Commission (10%, estimated)', '-₹24.50', 'Net receivable', '₹220.50', 'To be paid']) {
+  for (const s of ['Gross revenue', 'Commission (10%, estimated)', '-₹25', 'Net receivable', '₹220', 'To be paid']) {
     expect(t).toContain(s);
   }
 });
 
 test('the backend commission is shown without estimated', () => {
-  show({ ...L, amountExcludingDeliveryFee: 200, finance: { commission: 16 }, isSettled: true });
+  show({ ...L, amountExcludingDeliveryFee: 200, finance: { itemTotalAmount: 200, commissionRate: 8, commission: 16 }, isSettled: true });
   const t = textOf();
   for (const s of ['Commission (8%)', '-₹16', 'Settled']) expect(t).toContain(s);
   expect(t).not.toContain('estimated');
+});
+
+test('a coupon order shows the coupon the shop paid and what the commission was taken on', () => {
+  show({
+    ...L,
+    amountExcludingDeliveryFee: 100,
+    finance: { itemTotalAmount: 168, couponDiscount: 68, commissionRate: 10, commission: 17 },
+  });
+  const t = textOf();
+  for (const s of ['Item total', '₹168', 'Coupon (paid by shop)', '-₹68', 'Gross revenue', '₹100', 'Commission (10% of ₹168)', '-₹17', '₹83']) {
+    expect(t).toContain(s);
+  }
+});
+
+test('a commission sent without a rate shows no made-up percent', () => {
+  show({ ...L, amountExcludingDeliveryFee: 232, finance: { commission: 12 } });
+  const t = textOf();
+  expect(t).toContain('Commission | -₹12');
+  expect(t).not.toMatch(/Commission \(\d/);
 });
 
 test('a rejected order has no payout', () => {

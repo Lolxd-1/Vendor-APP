@@ -26,9 +26,14 @@ export interface ShopDetails {
   address?: { address?: string; city?: string; state?: string; postalCode?: string } | null;
 }
 
+// The money fields the backend sends with each order (same object the admin app reads).
 export interface OrderFinance {
+  itemTotalAmount?: number;
+  couponDiscount?: number;
+  couponCode?: string | null;
   commission?: number;
   commissionRate?: number;
+  commissionGst?: number;
 }
 
 export interface Order {

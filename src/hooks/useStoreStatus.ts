@@ -51,14 +51,16 @@ export const useStoreStatus = (shopId: string) => {
     [change, shopId],
   );
 
+  // The offline switch is re-read just before saving: the PC may have closed the store since this screen loaded,
+  // and the save sends the whole record.
   const save = useCallback(
     (week: Week) =>
       change(
-        () => saveSchedule(shopId, week, schedule?.manualOffline ?? false),
+        async () => saveSchedule(shopId, week, (await getSchedule(shopId)).manualOffline),
         { week },
         'Could not save store timings. Try again.',
       ),
-    [change, shopId, schedule?.manualOffline],
+    [change, shopId],
   );
 
   return { schedule, status, busy, error: actionError ?? remote.error, loading: remote.loading, setOnline, save, reload };

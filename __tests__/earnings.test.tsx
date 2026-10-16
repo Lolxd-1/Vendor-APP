@@ -22,7 +22,7 @@ const B = {
   orderId: 'B',
   state: 'COMPLETED',
   amountExcludingDeliveryFee: 200,
-  finance: { commission: 16 },
+  finance: { itemTotalAmount: 200, commissionRate: 8, commission: 16 },
   isSettled: true,
   creationTime: inside,
 } as unknown as Order;
@@ -56,13 +56,13 @@ test('shows the week summary', async () => {
   const text = textOf();
   for (const s of [
     'Net receivable',
-    '₹404.50',
+    '₹409',
     '₹445',
-    '-₹40.50',
-    '₹220.50',
+    '-₹36',
+    '₹225',
     '₹184',
     `Payout on ${dayLabel(week0.end)} · 2 orders`,
-    'Commission is estimated at 10% where QuickVerse did not send it.',
+    'Commission is estimated at 8% where QuickVerse did not send it.',
   ])
     expect(text).toContain(s);
 });
@@ -70,13 +70,13 @@ test('shows the week summary', async () => {
 test('each order card shows gross, commission and net', async () => {
   await show();
   const text = textOf();
-  for (const s of ['ID: A', 'Commission (10%, estimated)', '-₹24.50', 'To be paid', 'ID: B', 'Commission (8%)', '-₹16', 'Settled'])
+  for (const s of ['ID: A', 'Commission (8%, estimated)', '-₹20', 'To be paid', 'ID: B', 'Commission (8%)', '-₹16', 'Settled'])
     expect(text).toContain(s);
 });
 
 test('a card opens the order', async () => {
   await show();
-  act(() => byLabel('Order A, net receivable ₹220.50').props.onPress());
+  act(() => byLabel('Order A, net receivable ₹225').props.onPress());
   expect(onOpenOrder).toHaveBeenCalledWith(A);
 });
 
@@ -129,11 +129,11 @@ test("switching weeks never shows the previous week's numbers", async () => {
   let reject: (e: Error) => void = () => {};
   api.getAllOrders.mockReturnValueOnce(new Promise((_, rej) => (reject = rej)));
   await act(async () => byLabel('Previous week').props.onPress());
-  expect(textOf()).not.toContain('₹404.50');
+  expect(textOf()).not.toContain('₹409');
   expect(textOf()).not.toContain('ID: A');
   await act(async () => reject(new ApiError('No connection to the server', null)));
   expect(textOf()).toContain("Couldn't load earnings");
-  expect(textOf()).not.toContain('₹404.50');
+  expect(textOf()).not.toContain('₹409');
 });
 
 test('past weeks say of the week when capped', async () => {
@@ -148,7 +148,7 @@ test('a failed refresh keeps the numbers and says so once', async () => {
   await act(async () => r.update(ui(false)));
   api.getAllOrders.mockRejectedValueOnce(new ApiError('Try again.', 500));
   await act(async () => r.update(ui(true)));
-  expect(textOf()).toContain('₹404.50');
+  expect(textOf()).toContain('₹409');
   expect(textOf()).toContain('Showing the last numbers.');
   expect(textOf()).not.toContain('..');
 });

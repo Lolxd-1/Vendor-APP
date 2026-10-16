@@ -102,6 +102,50 @@ describe('history, stats and store timings (same contract as the web dashboard)'
     expect(fetchMock.mock.calls[0][1].method).toBe('PATCH');
   });
 
+  // The exact reply the live backend gives for a shop that never saved timings (shop 68246, 2026-10-16).
+  const NO_RECORD = { error: { code: '404-1', message: 'No configuration layout schema values found linked with shopId: 7' } };
+
+  it('a shop with no schedule record reads as open with no closures, not as an error', async () => {
+    reply(404, NO_RECORD);
+    await expect(getSchedule('7')).resolves.toEqual({ manualOffline: false, week: {} });
+  });
+
+  it('other schedule failures stay errors', async () => {
+    reply(500, { error: { message: 'down' } });
+    await expect(getSchedule('7')).rejects.toThrow('down');
+  });
+
+  it('going offline with no record yet creates it with the switch off and no timetable', async () => {
+    reply(404, NO_RECORD); // PATCH
+    reply(404, NO_RECORD); // GET confirms there is no record
+    reply(200, {}); // POST configure
+    await setManualOffline('7', true);
+    expect(fetchMock.mock.calls.map(c => c[1].method)).toEqual(['PATCH', 'GET', 'POST']);
+    const [url, init] = fetchMock.mock.calls[2];
+    expect(url).toBe('http://prd.quickverse.in/v1/vendor-schedules/configure');
+    expect(JSON.parse(init.body)).toEqual({ shopId: '7', manualOfflineOverride: true, scheduleActive: false, operatingHours: '{}' });
+  });
+
+  it('going online with no record does nothing more (it is online already)', async () => {
+    reply(404, NO_RECORD);
+    reply(404, NO_RECORD);
+    await expect(setManualOffline('7', false)).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('never overwrites existing timings: a 404 on the switch with a record present is an error', async () => {
+    reply(404, { error: { message: 'Not Found' } }); // PATCH
+    reply(200, { manualOfflineOverride: false, operatingHoursJson: '{"Mon":{"openTime":"10:00","closeTime":"11:00"}}' });
+    await expect(setManualOffline('7', true)).rejects.toThrow('Could not change store status');
+    expect(fetchMock.mock.calls.map(c => c[1].method)).toEqual(['PATCH', 'GET']);
+  });
+
+  it('a failed switch that is not a 404 is reported and nothing else is sent', async () => {
+    reply(502, { error: { message: 'Bad gateway' } });
+    await expect(setManualOffline('7', true)).rejects.toThrow('Bad gateway');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('saving timings keeps the current manual-offline value', async () => {
     reply(200, {});
     await saveSchedule('7', { Mon: { openTime: '10:00', closeTime: '11:00' } }, true);

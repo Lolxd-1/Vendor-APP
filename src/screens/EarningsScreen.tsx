@@ -4,7 +4,7 @@ import { getAllOrders } from '../api/endpoints';
 import { dayTime, money, paymentLabel } from '../domain/format';
 import type { Order } from '../domain/order';
 import { dayLabel, rangeLabel, rangeQuery, settlementWeek } from '../domain/period';
-import { DEFAULT_COMMISSION_PCT, payoutOf, summarize } from '../domain/payout';
+import { commissionLabel, DEFAULT_COMMISSION_PCT, payoutOf, shopCommissionPct, summarize } from '../domain/payout';
 import { useRemote } from '../hooks/useRemote';
 import { EmptyState } from '../ui/EmptyState';
 import { StatusPill } from '../ui/Badge';
@@ -15,7 +15,7 @@ import { Txt } from '../ui/Txt';
 
 const Line = ({ label, value, color, strong }: { label: string; value: string; color?: string; strong?: boolean }) => (
   <View style={styles.line}>
-    <Txt variant={strong ? 'headline' : 'body'} color={strong ? colors.ink : colors.ink2} numberOfLines={1} style={styles.label}>
+    <Txt variant={strong ? 'headline' : 'body'} color={strong ? colors.ink : colors.ink2} numberOfLines={2} style={styles.label}>
       {label}
     </Txt>
     <Txt variant={strong ? 'headline' : 'body'} color={color} tabular numberOfLines={1} style={styles.value}>
@@ -24,8 +24,8 @@ const Line = ({ label, value, color, strong }: { label: string; value: string; c
   </View>
 );
 
-const OrderCard = ({ order, onOpen }: { order: Order; onOpen: (o: Order) => void }) => {
-  const p = payoutOf(order);
+const OrderCard = ({ order, pct, onOpen }: { order: Order; pct: number; onOpen: (o: Order) => void }) => {
+  const p = payoutOf(order, pct);
   if (!p) return null;
   return (
     <Pressable
@@ -58,7 +58,7 @@ const OrderCard = ({ order, onOpen }: { order: Order; onOpen: (o: Order) => void
       </View>
       <View style={styles.hairline} />
       <Line label="Gross revenue" value={money(p.gross)} />
-      <Line label={`Commission (${p.pct}%${p.estimated ? ', estimated' : ''})`} value={money(-p.commission)} />
+      <Line label={commissionLabel(p)} value={money(-p.commission)} />
       <Line label="Net receivable" value={money(p.net)} strong />
     </Pressable>
   );
@@ -93,7 +93,8 @@ export const EarningsScreen = ({
 
   const orders = data?.orders;
   const sum = useMemo(() => (orders ? summarize(orders) : null), [orders]);
-  const cards = useMemo(() => (orders ?? []).filter(o => payoutOf(o)), [orders]);
+  const pct = useMemo(() => shopCommissionPct(orders ?? []) ?? DEFAULT_COMMISSION_PCT, [orders]);
+  const cards = useMemo(() => (orders ?? []).filter(o => payoutOf(o, pct)), [orders, pct]);
 
   const range = rangeLabel(week);
   const title = offset === 0 ? 'This week' : offset === -1 ? 'Last week' : range;
@@ -161,11 +162,12 @@ export const EarningsScreen = ({
             <View style={styles.hairline} />
             <Line label="Gross revenue" value={money(sum.gross)} />
             <Line label="Commission" value={money(-sum.commission)} />
+            {sum.commissionGst > 0 && <Line label="GST on commission" value={money(-sum.commissionGst)} />}
             <Line label="To be paid" value={money(sum.toBePaid)} color={colors.amber} />
             <Line label="Settled" value={money(sum.settled)} color={colors.green} />
             {sum.estimated && (
               <Txt variant="footnote" color={colors.ink2}>
-                {`Commission is estimated at ${DEFAULT_COMMISSION_PCT}% where QuickVerse did not send it.`}
+                {`Commission is estimated at ${pct}% where QuickVerse did not send it.`}
               </Txt>
             )}
             {!data.complete && (
@@ -193,7 +195,7 @@ export const EarningsScreen = ({
                 Orders
               </Txt>
               {cards.map(o => (
-                <OrderCard key={o.orderId} order={o} onOpen={onOpenOrder} />
+                <OrderCard key={o.orderId} order={o} pct={pct} onOpen={onOpenOrder} />
               ))}
             </>
           )}
